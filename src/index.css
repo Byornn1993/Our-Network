@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens ─────────────────────────────────────────────
+   Diep groenzwart, warm mintgroen als accent, warme gloed voor het middelpunt. */
+:root,
+:root[data-theme='dark'] {
+  --bg: #080d0c;
+  --surface: #111817;
+  --surface-2: #19231f;
+  --card: #151e1c;
+  --border: #26332f;
+  --text: #f3f6f5;
+  --muted: #9daaa5;
+  --faint: #5e6b66;
+  --primary: #173a2f;
+  --primary-soft: #10231d;
+  --accent: #62e3b0;
+  --accent-ink: #04150e;
+  --gold: #e9b949;
+  --danger: #f05a5f;
+  --warn: #f0b429;
+  --map-ring: rgba(98, 227, 176, 0.07);
+  --map-label: #c9d3cf;
+  --shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  --radius: 18px;
+  --nav-h: 64px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f4f7f6;
+  --surface: #ffffff;
+  --surface-2: #eef3f1;
+  --card: #ffffff;
+  --border: #dbe4e0;
+  --text: #0e1513;
+  --muted: #56645f;
+  --faint: #8d9a95;
+  --primary: #d6f3e7;
+  --primary-soft: #e6f7f0;
+  --accent: #129469;
+  --accent-ink: #ffffff;
+  --gold: #c48f1b;
+  --map-ring: rgba(18, 148, 105, 0.1);
+  --map-label: #2b3632;
+  --shadow: 0 10px 30px -14px rgba(16, 40, 32, 0.25);
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-feature-settings: 'cv11' 1;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+}
+
+/* iOS zoomt in op inputs kleiner dan 16px */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-border bg-card;
+    box-shadow: var(--shadow);
+  }
+  .tap {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  .label {
+    @apply text-xs font-medium uppercase tracking-wide text-muted;
+  }
+  .field {
+    @apply w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-text placeholder:text-faint focus:border-accent focus:outline-none;
+  }
+  .section-title {
+    @apply px-1 pb-2 text-[13px] font-semibold uppercase tracking-wide text-muted;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.anim-sheet {
+  animation: sheet-in 180ms ease-out;
+}
+
+@keyframes fade-up {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.anim-fade-up {
+  animation: fade-up 260ms ease-out both;
+}
+
+@keyframes hub-glow {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.anim-glow {
+  animation: hub-glow 4s ease-in-out infinite;
+}
