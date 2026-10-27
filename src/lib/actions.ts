@@ -27,7 +27,7 @@ export async function savePerson(
     connections: ConnectionInput[];
     /** Bij een categoriewijziging: vanaf wanneer geldt de nieuwe categorie, en waarom. */
     categoryChange?: DateInput & { description: string | null };
-    /** Bij een nieuwe persoon: meteen een "eerste ontmoeting" in Our Story zetten. */
+    /** Een "eerste ontmoeting" in Our Story zetten (nieuwe persoon, of bestaande zonder zo'n moment). */
     createFirstMeeting?: boolean;
   },
 ): Promise<string> {
@@ -74,7 +74,7 @@ export async function savePerson(
     })),
   );
 
-  if (!existing && opts.createFirstMeeting && input.first_met_at) {
+  if (opts.createFirstMeeting && input.first_met_at && !(existing && firstMeetingOf(s, id))) {
     const type = s.event_categories.find((c) => c.system_key === 'first_meeting');
     if (type) {
       const eventId = newId();
@@ -101,6 +101,16 @@ export async function savePerson(
 
   await write(changes);
   return id;
+}
+
+/** Het bestaande "eerste ontmoeting"-moment van een persoon, als dat er is. */
+export function firstMeetingOf(s: Store, personId: string): StoryEvent | undefined {
+  const type = s.event_categories.find((c) => c.system_key === 'first_meeting');
+  if (!type) return undefined;
+  return s.event_persons
+    .filter((l) => l.person_id === personId)
+    .map((l) => s.eventById.get(l.event_id))
+    .find((e): e is StoryEvent => !!e && e.event_category_id === type.id);
 }
 
 export async function setPersonAvatar(personId: string, path: string | null): Promise<void> {

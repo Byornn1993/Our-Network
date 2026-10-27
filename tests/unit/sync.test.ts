@@ -4,7 +4,7 @@ import { buildStore, type Store } from '@/lib/db/store';
 import { SYNC_TABLES, type SyncTable } from '@/lib/db/types';
 import { change, write } from '@/lib/db/repo';
 import { RemoteError, resolveConflict, syncOnce, type RemoteApi } from '@/lib/sync/engine';
-import { archivePerson, deletePerson, saveEvent, savePerson, type PersonInput } from '@/lib/actions';
+import { archivePerson, deletePerson, firstMeetingOf, saveEvent, savePerson, type PersonInput } from '@/lib/actions';
 import { buildBackup, importBackup } from '@/lib/backup';
 
 // Twee "toestellen" (Bjorn en Stephanie) met elk een eigen lokale database, één gedeelde nep-server.
@@ -102,6 +102,19 @@ describe('sync tussen twee toestellen', () => {
     expect(sb.personById.get(id)?.first_name).toBe('Thomas');
     expect(sb.event_persons.filter((l) => l.person_id === id)).toHaveLength(1);
     expect(sb.person_connections[0]?.description).toBe('collega');
+  });
+
+  it('eerste ontmoeting achteraf toevoegen bij bewerken, maar nooit dubbel', async () => {
+    const server = fakeServer();
+    const a = device();
+    await syncOnce(a, server.api);
+    const id = await savePerson(await storeOf(a), input('Georgette', KENNIS), { connections: [] });
+    const later = input('Georgette', KENNIS, { first_met_at: '1993-05-01', first_met_precision: 'day' });
+    await savePerson(await storeOf(a), later, { id, connections: [], createFirstMeeting: true });
+    await savePerson(await storeOf(a), later, { id, connections: [], createFirstMeeting: true });
+    await syncOnce(a, server.api);
+    expect(server.rows('events').map((e) => e.event_date)).toEqual(['1993-05-01']);
+    expect(firstMeetingOf(await storeOf(a), id)?.event_date).toBe('1993-05-01');
   });
 
   it('categoriewijziging overschrijft niets: de oude categorie blijft in de geschiedenis', async () => {

@@ -4,7 +4,7 @@ import { ChevronDown, Plus, X } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
 import { newId } from '@/lib/db/repo';
 import type { ContactDetail, DatePrecision } from '@/lib/db/types';
-import { savePerson, type PersonInput } from '@/lib/actions';
+import { firstMeetingOf, savePerson, type PersonInput } from '@/lib/actions';
 import { removeFiles, uploadAvatar } from '@/lib/images';
 import { todayIso } from '@/domain/dates';
 import { fullName } from '@/domain/people';
@@ -65,6 +65,7 @@ export default function PersonFormPage() {
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
   const category = s.categoryById.get(f.category_id);
   const categoryChanged = !!existing && existing.category_id !== f.category_id && !!f.category_id;
+  const canFirstMeeting = !existing || !firstMeetingOf(s, existing.id);
   const activeCategories = s.categories.filter((c) => !c.archived_at || c.id === existing?.category_id);
 
   const validate = () => {
@@ -112,7 +113,7 @@ export default function PersonFormPage() {
         .filter(([, v]) => v.on)
         .map(([profileId, v]) => ({ profileId, description: blankToNull(v.description) })),
       categoryChange: categoryChanged ? { date: change.date || todayIso(), precision: change.precision, description: blankToNull(change.description) } : undefined,
-      createFirstMeeting: !existing && firstMeeting && !!f.first_met_at,
+      createFirstMeeting: canFirstMeeting && firstMeeting && !!f.first_met_at,
     });
     // oude, vervangen foto's opruimen
     const stale = [...uploaded.current.filter((p) => p !== f.avatar_path), existing?.avatar_path !== f.avatar_path ? existing?.avatar_path : null];
@@ -221,7 +222,7 @@ export default function PersonFormPage() {
           <Field label="Wanneer leerden we elkaar kennen?" hint="Weet je enkel het jaar of de maand? Kies dan die precisie." error={errors.first_met_at}>
             {(fid) => <DateField id={fid} value={f.first_met_at} precision={f.first_met_precision} onChange={(d, p) => setF((x) => ({ ...x, first_met_at: d, first_met_precision: p }))} max={todayIso()} />}
           </Field>
-          {!existing && f.first_met_at && (
+          {canFirstMeeting && f.first_met_at && (
             <Toggle checked={firstMeeting} onChange={setFirstMeeting} label="Eerste ontmoeting in Our Story zetten" hint="Maakt meteen een gebeurtenis op de tijdlijn en op het profiel." />
           )}
           <Field label="Korte beschrijving">
