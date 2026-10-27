@@ -29,7 +29,7 @@ import { useStore } from '@/lib/db/store';
 import { usePref } from '@/lib/prefs';
 import { resetPositions } from '@/lib/actions';
 import { useAuth } from '@/features/auth/AuthProvider';
-import { isLocalMode } from '@/lib/backend';
+import { isArtifactMode, isLocalMode } from '@/lib/backend';
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -159,7 +159,7 @@ export default function SettingsPage() {
             to="/instellingen/gegevens"
             icon={<Image size={19} />}
             label="Foto-opslag"
-            hint={`${s.event_photos.length} foto's in een privé-opslag (Supabase Storage), enkel voor jullie twee`}
+            hint={`${s.event_photos.length} foto's in een privé-opslag (${isArtifactMode ? 'opslag van de artifact' : 'Supabase Storage'}), enkel voor jullie twee`}
           />
         </Group>
 
@@ -207,14 +207,19 @@ export default function SettingsPage() {
 
         <Group title="Applicatie">
           <Row to="/instellingen/toegang" icon={<KeyRound size={19} />} label="Toegang" hint="Wie mag in deze netwerkruimte" />
-          <Row icon={<Smartphone size={19} />} label="Installeren als app" hint={install} />
+          <Row icon={<Smartphone size={19} />} label="Installeren als app" hint={isArtifactMode ? "Open de artifact in de Claude-app op je iPhone of in claude.ai op je laptop" : install} />
           <Row
             icon={<Info size={19} />}
             label="Privacy"
-            hint="Jullie gegevens staan in jullie eigen Supabase-project (EU) met Row Level Security. Op dit toestel staat een lokale kopie die bij uitloggen gewist wordt."
+            hint={isArtifactMode ? "Jullie gegevens staan in de privé-opslag van deze artifact: enkel de eigenaar en wie als Editor uitgenodigd is, kan ze lezen. Privé-momenten ziet enkel wie ze maakte." : "Jullie gegevens staan in jullie eigen Supabase-project (EU) met Row Level Security. Op dit toestel staat een lokale kopie die bij uitloggen gewist wordt."}
           />
-          <Row icon={<User size={19} />} label={user?.email ?? ''} hint={`Our Network v${__APP_VERSION__}${isLocalMode ? ' · lokale testmodus' : ''}`} />
-          <Row onClick={() => void logout()} icon={<LogOut size={19} />} label="Uitloggen" danger />
+          <Row
+            icon={<User size={19} />}
+            label={user?.name || user?.email || 'Jij'}
+            hint={`Our Network v${__APP_VERSION__}${isLocalMode ? ' · lokale testmodus' : isArtifactMode ? ' · claude.ai-artifact' : ''}`}
+          />
+          {/* In de artifact log je uit via Claude zelf. */}
+          {!isArtifactMode && <Row onClick={() => void logout()} icon={<LogOut size={19} />} label="Uitloggen" danger />}
         </Group>
         {msg && (
           <p role="status" className="text-center text-sm text-muted">

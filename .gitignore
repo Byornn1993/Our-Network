@@ -22,3 +22,4 @@ supabase/.branches
 /reference/
 /exports/
 dist-e2e
+dist-artifact

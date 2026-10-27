@@ -98,6 +98,7 @@ export function createSupabaseBackend(url: string, key: string): Backend {
       async upload(path, blob) {
         const { error } = await client.storage.from(BUCKET).upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true, cacheControl: '31536000' });
         if (error) throw toError(error);
+        return path;
       },
       async remove(paths) {
         if (!paths.length) return;

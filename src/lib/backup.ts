@@ -3,6 +3,7 @@ import type { Store } from '@/lib/db/store';
 import { change, write, type Change } from '@/lib/db/repo';
 import { SYNC_TABLES, type SyncTable } from '@/lib/db/types';
 import { fullName } from '@/domain/people';
+import { getBackend } from '@/lib/backend';
 
 // Back-up: alle gedeelde gegevens als JSON (foto's zelf zitten in Supabase Storage; enkel hun paden).
 // Importeren VOEGT SAMEN: nieuwe rijen worden toegevoegd, bestaande enkel overschreven als de back-up nieuwer is.
@@ -22,7 +23,10 @@ export function buildBackup(s: Store) {
   return { format: BACKUP_FORMAT, version: 1 as const, exported_at: new Date().toISOString(), tables };
 }
 
-export function download(filename: string, content: string, type: string) {
+/** Bestand aanbieden. In de Artifact via `downloads` (de kijker bevestigt), elders als gewone browserdownload. */
+export async function download(filename: string, content: string, type: string): Promise<void> {
+  const save = getBackend().saveFile;
+  if (save) return save(filename, content);
   const url = URL.createObjectURL(new Blob([content], { type }));
   const a = document.createElement('a');
   a.href = url;

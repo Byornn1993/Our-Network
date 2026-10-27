@@ -63,9 +63,7 @@ export async function cropSquare(img: HTMLImageElement, crop: SquareCrop, out = 
 
 export async function uploadAvatar(kind: 'persons' | 'profiles', ownerId: string, blob: Blob): Promise<string> {
   // Nieuwe bestandsnaam bij elke wijziging: geen verouderde versies in caches.
-  const path = `avatars/${kind}/${ownerId}/${newId()}.jpg`;
-  await getBackend().storage.upload(path, blob);
-  return path;
+  return getBackend().storage.upload(`avatars/${kind}/${ownerId}/${newId()}.jpg`, blob);
 }
 
 export async function uploadEventPhoto(eventId: string, file: Blob): Promise<{ id: string; storage_path: string; thumb_path: string; width: number; height: number }> {
@@ -74,11 +72,10 @@ export async function uploadEventPhoto(eventId: string, file: Blob): Promise<{ i
     const full = await resizeToJpeg(img, PHOTO_MAX, 0.82);
     const thumb = await resizeToJpeg(img, THUMB_MAX, 0.78);
     const id = newId();
-    const storage_path = `events/${eventId}/${id}.jpg`;
-    const thumb_path = `events/${eventId}/${id}_thumb.jpg`;
     const backend = getBackend();
-    await backend.storage.upload(storage_path, full.blob);
-    await backend.storage.upload(thumb_path, thumb.blob);
+    // De backend bepaalt de definitieve sleutel (Supabase: dit pad; artifact: een asset-id).
+    const storage_path = await backend.storage.upload(`events/${eventId}/${id}.jpg`, full.blob);
+    const thumb_path = await backend.storage.upload(`events/${eventId}/${id}_thumb.jpg`, thumb.blob);
     return { id, storage_path, thumb_path, width: full.width, height: full.height };
   } finally {
     URL.revokeObjectURL(img.src);

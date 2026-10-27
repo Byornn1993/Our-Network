@@ -8,6 +8,7 @@
     "dev": "vite",
     "dev:local": "vite --mode devlocal",
     "build": "tsc -b && vite build && node scripts/spa-fallback.mjs",
+    "build:artifact": "tsc -b && vite build --mode artifact && node scripts/artifact-page.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",

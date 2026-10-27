@@ -7,6 +7,7 @@ import { Sheet } from '@/components/ui/Sheet';
 import { SyncIndicator } from './SyncIndicator';
 import { useSyncStatus } from '@/lib/sync/status';
 import { RelationshipSheet } from '@/features/persons/RelationshipSheet';
+import { isReadOnly } from '@/lib/backend';
 
 const MOBILE_NAV = [
   { to: '/netwerk', label: 'Netwerk', icon: Network },
@@ -118,7 +119,12 @@ export function AppShell({ children }: { children?: ReactNode }) {
       </aside>
 
       <div className="min-w-0 flex-1">
-        <div className="md:hidden" style={{ paddingTop: 'var(--safe-top)' }} />
+        <div className="safe-top-spacer md:hidden" style={{ paddingTop: 'var(--safe-top)' }} />
+        {isReadOnly() && (
+          <div className="border-b border-warn/20 bg-warn/10 px-4 py-2 text-center text-xs text-warn" role="status">
+            Alleen lezen: je kunt Our Network bekijken, maar niet aanpassen. Vraag Editor-toegang aan de eigenaar.
+          </div>
+        )}
         {(!sync.online || sync.phase === 'error') && (
           <div className={`flex justify-center border-b md:hidden ${sync.online ? 'border-danger/20 bg-danger/10' : 'border-warn/20 bg-warn/10'}`}>
             <SyncIndicator />

@@ -22,6 +22,31 @@ const AuthContext = createContext<AuthState | null>(null);
 
 const MEMBER_KEY = (uid: string) => `ournetwork-member-${uid}`;
 
+// localStorage kan ontbreken of een fout gooien (privévenster, artifact-sandbox): dan zonder cache verder.
+const store = {
+  get: (k: string) => {
+    try {
+      return localStorage.getItem(k);
+    } catch {
+      return null;
+    }
+  },
+  set: (k: string, v: string) => {
+    try {
+      localStorage.setItem(k, v);
+    } catch {
+      /* geen cache */
+    }
+  },
+  remove: (k: string) => {
+    try {
+      localStorage.removeItem(k);
+    } catch {
+      /* geen cache */
+    }
+  },
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [backend, setBackend] = useState<Backend | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -50,14 +75,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Lidmaatschap van de gedeelde ruimte. Offline vertrouwen we op de laatst gekende status.
   useEffect(() => {
     if (!userId || !backend) return setMembership('unknown');
-    const cached = localStorage.getItem(MEMBER_KEY(userId));
+    const cached = store.get(MEMBER_KEY(userId));
     setMembership(cached === '1' ? 'member' : 'unknown');
     let cancelled = false;
     backend
       .claimMembership()
       .then((ok) => {
         if (cancelled) return;
-        localStorage.setItem(MEMBER_KEY(userId), ok ? '1' : '0');
+        store.set(MEMBER_KEY(userId), ok ? '1' : '0');
         setMembership(ok ? 'member' : 'denied');
       })
       .catch(() => {
@@ -109,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await backend.auth.signOut().catch(() => {});
       // Persoonsgegevens niet op het toestel laten staan na uitloggen.
       await deleteLocalDb(userId);
-      localStorage.removeItem(MEMBER_KEY(userId));
+      store.remove(MEMBER_KEY(userId));
       setUser(null);
       return { pending: 0 };
     },

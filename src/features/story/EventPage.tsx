@@ -6,6 +6,7 @@ import type { EventPhoto } from '@/lib/db/types';
 import { addEventPhotos, deleteEvent, deletePhoto, updatePhoto } from '@/lib/actions';
 import { removeFiles, uploadEventPhoto, useSignedUrl } from '@/lib/images';
 import { useSyncStatus } from '@/lib/sync/status';
+import { canUpload } from '@/lib/backend';
 import { flushSync } from '@/lib/sync/scheduler';
 import { formatRange, relativeDays } from '@/domain/dates';
 import { fullName } from '@/domain/people';
@@ -185,7 +186,7 @@ export default function EventPage() {
         </div>
       )}
 
-      <div className="mt-3 flex items-center gap-3">
+      <div className={`mt-3 flex items-center gap-3 ${canUpload() ? '' : 'hidden'}`}>
         <Button size="sm" icon={<ImagePlus size={15} />} disabled={!online || !!uploading} loading={!!uploading} onClick={() => input.current?.click()}>
           {uploading ?? "Foto's toevoegen"}
         </Button>

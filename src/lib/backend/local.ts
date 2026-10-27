@@ -165,6 +165,7 @@ export function createLocalBackend(): Backend {
       async upload(path, blob) {
         await requireMember();
         await server.files.put({ path, blob });
+        return path;
       },
       async remove(paths) {
         await requireMember();

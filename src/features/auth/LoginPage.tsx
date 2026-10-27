@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { Mail } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/Logo';
-import { isLocalMode } from '@/lib/backend';
+import { isArtifactMode, isLocalMode } from '@/lib/backend';
 import { useAuth } from './AuthProvider';
 
 /** Volledig adres van een pagina binnen de app (werkt lokaal én onder /Our-Network/ op GitHub Pages). */
@@ -72,6 +72,21 @@ export default function LoginPage() {
       setBusy(false);
     }
   };
+
+  // In de Artifact log je niet apart in: Claude weet wie de pagina bekijkt.
+  if (isArtifactMode && !loading)
+    return (
+      <AuthScreen>
+        <div className="card space-y-2 p-4 text-sm text-muted">
+          <p className="font-semibold text-text">Open Our Network via Claude</p>
+          <p>
+            {backend
+              ? 'Claude kon niet bepalen wie deze pagina bekijkt. Log in op claude.ai (of open de Claude-app) en open de artifact opnieuw.'
+              : 'De gedeelde opslag van deze artifact is hier niet beschikbaar. Open de artifact terwijl je ingelogd bent op claude.ai of in de Claude-app, met een account waarmee hij gedeeld is.'}
+          </p>
+        </div>
+      </AuthScreen>
+    );
 
   if (!loading && !backend)
     return (

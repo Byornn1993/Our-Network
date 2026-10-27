@@ -3,6 +3,8 @@ import type { RemoteApi } from '@/lib/sync/engine';
 export interface AuthUser {
   id: string;
   email: string;
+  /** Weergavenaam, als de backend die kent (artifact-modus). */
+  name?: string;
 }
 
 export type AuthEvent = 'SIGNED_IN' | 'SIGNED_OUT' | 'PASSWORD_RECOVERY' | 'OTHER';
@@ -14,12 +16,12 @@ export interface Member {
 }
 
 /**
- * Alles wat de app van de backend nodig heeft. In productie: Supabase.
+ * Alles wat de app van de backend nodig heeft. In productie: Supabase of de claude.ai-Artifact.
  * Voor ontwikkeling en e2e-tests bestaat een lokale nabootsing (`npm run dev:local`), die NOOIT
- * in de productiebuild terechtkomt.
+ * in een productiebuild terechtkomt.
  */
 export interface Backend {
-  kind: 'supabase' | 'local';
+  kind: 'supabase' | 'local' | 'artifact';
   auth: {
     getUser(): Promise<AuthUser | null>;
     onChange(cb: (user: AuthUser | null, event: AuthEvent) => void): () => void;
@@ -38,9 +40,17 @@ export interface Backend {
   };
   remote: RemoteApi;
   storage: {
-    upload(path: string, blob: Blob): Promise<void>;
+    /** Bewaart een bestand en geeft de sleutel terug die in de database komt (pad of asset-id). */
+    upload(path: string, blob: Blob): Promise<string>;
     remove(paths: string[]): Promise<void>;
     /** Kortlevende URL's om privébestanden te tonen. */
     signedUrls(paths: string[]): Promise<Record<string, string>>;
   };
+  /** Wat deze kijker mag; null = onbekend (laat het platform beslissen bij de eerste schrijfactie). */
+  permissions?: {
+    canWrite: boolean | null;
+    canUpload: boolean;
+  };
+  /** Een gegenereerd bestand aan de kijker aanbieden (artifact: via `downloads`). */
+  saveFile?(filename: string, data: string): Promise<void>;
 }

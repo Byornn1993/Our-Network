@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { isArtifactMode } from '@/lib/backend';
 import { ShieldAlert } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { AuthScreen } from '@/features/auth/LoginPage';
@@ -105,9 +106,14 @@ function Protected() {
   );
 }
 
+/** In een Artifact bestaan er geen serverpaden: routes in de #hash. Elders gewone paden (GitHub Pages). */
+function Router({ children }: { children: React.ReactNode }) {
+  return isArtifactMode ? <HashRouter>{children}</HashRouter> : <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>{children}</BrowserRouter>;
+}
+
 export default function App() {
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+    <Router>
       <AuthProvider>
         <Suspense fallback={<Spinner />}>
           <Routes>
@@ -139,6 +145,6 @@ export default function App() {
         </Suspense>
         <UpdatePrompt />
       </AuthProvider>
-    </BrowserRouter>
+    </Router>
   );
 }

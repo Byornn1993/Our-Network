@@ -16,6 +16,7 @@ import { PersonPicker, ProfileToggles } from '@/components/PersonPicker';
 import { CatIcon } from '@/components/icons';
 import { EmptyState } from '@/components/ui/States';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { canUpload } from '@/lib/backend';
 
 const blankToNull = (v: string) => (v.trim() ? v.trim() : null);
 
@@ -195,7 +196,9 @@ export default function EventFormPage() {
         </FormSection>
 
         <FormSection title="Foto's">
-          {existing ? (
+          {!canUpload() ? (
+            <p className="text-sm text-muted">Foto's toevoegen kan enkel met bewerkrechten (Editor) op Our Network.</p>
+          ) : existing ? (
             <p className="text-sm text-muted">Foto's toevoegen, beschrijven of verwijderen doe je op de pagina van de gebeurtenis.</p>
           ) : (
             <>

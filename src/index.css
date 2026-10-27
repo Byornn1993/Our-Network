@@ -157,3 +157,8 @@ textarea {
 .anim-glow {
   animation: hub-glow 4s ease-in-out infinite;
 }
+
+/* claude.ai-Artifact: het platform zet de bovenmarge (notch) al op :root. */
+.artifact-mode .safe-top-spacer {
+  display: none;
+}

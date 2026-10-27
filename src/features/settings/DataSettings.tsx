@@ -6,6 +6,7 @@ import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { useStore } from '@/lib/db/store';
 import { buildBackup, download, importBackup, personsCsv } from '@/lib/backup';
 import { todayIso } from '@/domain/dates';
+import { isArtifactMode } from '@/lib/backend';
 
 export default function DataSettings() {
   const s = useStore();
@@ -15,6 +16,16 @@ export default function DataSettings() {
   const [busy, setBusy] = useState(false);
   const photoCount = s.event_photos.length;
   const avatarCount = s.persons.filter((p) => p.avatar_path).length + s.profiles.filter((p) => p.avatar_path).length;
+
+  const exportFile = async (filename: string, content: string, type: string) => {
+    setMsg(null);
+    try {
+      await download(filename, content, type);
+    } catch (e) {
+      const code = (e as { code?: string })?.code;
+      if (code !== 'declined') setMsg({ ok: false, text: `Exporteren lukte niet${code ? ` (${code})` : ''}.` });
+    }
+  };
 
   const doImport = async (file: File) => {
     const ok = await confirm({
@@ -44,7 +55,7 @@ export default function DataSettings() {
           <p className="text-sm text-muted">
             Alle personen, categorieën, relaties, gebeurtenissen en geschiedenis als één JSON-bestand. Bewaar het op een veilige plek: het bevat persoonsgegevens.
           </p>
-          <Button variant="primary" icon={<Download size={16} />} onClick={() => download(`our-network-backup-${todayIso()}.json`, JSON.stringify(buildBackup(s), null, 2), 'application/json')}>
+          <Button variant="primary" icon={<Download size={16} />} onClick={() => exportFile(`our-network-backup-${todayIso()}.json`, JSON.stringify(buildBackup(s), null, 2), 'application/json')}>
             Back-up downloaden
           </Button>
         </section>
@@ -52,7 +63,7 @@ export default function DataSettings() {
         <section className="card space-y-3 p-4">
           <p className="font-semibold">Exporteren naar Excel</p>
           <p className="text-sm text-muted">Een overzicht van alle {s.persons.length} personen als CSV-bestand (opent in Excel).</p>
-          <Button icon={<FileSpreadsheet size={16} />} onClick={() => download(`our-network-personen-${todayIso()}.csv`, personsCsv(s), 'text/csv;charset=utf-8')}>
+          <Button icon={<FileSpreadsheet size={16} />} onClick={() => exportFile(`our-network-personen-${todayIso()}.csv`, personsCsv(s), 'text/csv;charset=utf-8')}>
             Personen exporteren (CSV)
           </Button>
         </section>
@@ -86,7 +97,7 @@ export default function DataSettings() {
             <Image size={17} /> Foto-opslag
           </p>
           <p className="text-sm text-muted">
-            {photoCount} herinneringsfoto's en {avatarCount} profielfoto's staan in een privé-opslag (Supabase Storage). Ze worden verkleind opgeslagen (max. 1600 px) en zijn enkel zichtbaar
+            {photoCount} herinneringsfoto's en {avatarCount} profielfoto's staan in een privé-opslag ({isArtifactMode ? 'opslag van de artifact' : 'Supabase Storage'}). Ze worden verkleind opgeslagen (max. 1600 px) en zijn enkel zichtbaar
             voor jullie twee, via links die na een uur verlopen. De back-up bevat de verwijzingen, niet de foto's zelf.
           </p>
         </section>

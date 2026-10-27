@@ -49,6 +49,18 @@ tests/           unit · rls · e2e
 - Geen DELETE-rechten op datatabellen: verwijderen = `deleted_at`. Archiveren = `archived_at`. Gebeurtenissen blijven altijd bestaan.
 - Privé-herinneringen (`is_private`) zijn via RLS enkel zichtbaar voor de maker.
 
+## Als claude.ai-Artifact (huidige productie)
+
+Omdat het gratis Supabase-plan maar 2 projecten toelaat, draait Our Network als Artifact:
+https://claude.ai/artifact/A5euRhFGiwRrz2RfmLkVzq — zie [docs/PLAN-ARTIFACT.md](docs/PLAN-ARTIFACT.md).
+
+```bash
+npm run build:artifact
+```
+
+Dit bouwt `dist-artifact/` (`page.html` + `artifact-files.json`), dat met het Artifact-tool gepubliceerd wordt
+(capabilities `db` met rules, `user`, `assets`, `downloads`). Toegang: eigenaar + per e-mail uitgenodigde Editors, geen openbare link.
+
 ## Lokaal ontwikkelen
 
 ```bash

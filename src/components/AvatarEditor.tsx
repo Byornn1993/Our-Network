@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/Avatar';
 import { cropSquare, loadImage, type SquareCrop } from '@/lib/images';
 import { useSyncStatus } from '@/lib/sync/status';
+import { canUpload } from '@/lib/backend';
 
 const V = 280; // zijde van het uitsnedevenster in px
 
@@ -129,6 +130,9 @@ export function AvatarPicker({
       setBusy(false);
     }
   };
+
+  // Zonder uploadrechten (artifact: geen Editor) enkel de foto tonen.
+  if (!canUpload()) return <Avatar path={path} name={name || '?'} size={size} color={color} />;
 
   return (
     <div className="flex flex-col items-center gap-2">
