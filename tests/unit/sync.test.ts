@@ -131,6 +131,14 @@ describe('sync tussen twee toestellen', () => {
     ]);
   });
 
+  it('een cursor in de toekomst wordt genegeerd: alles opnieuw ophalen', async () => {
+    const server = fakeServer();
+    const a = device();
+    await a.meta.put({ key: 'cursor:categories', value: new Date(Date.now() + 3_600_000).toISOString() });
+    await syncOnce(a, server.api);
+    expect((await storeOf(a)).categories.map((c) => c.id).sort()).toEqual([VRIEND, KENNIS].sort());
+  });
+
   it('offline wijzigingen blijven in de wachtrij en gaan later alsnog door', async () => {
     const server = fakeServer();
     const a = device();

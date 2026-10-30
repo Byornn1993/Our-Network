@@ -53,4 +53,5 @@ export function CatIcon({ name, size = 16, className = '' }: { name: string; siz
   return <Icon size={size} className={className} aria-hidden />;
 }
 
-export const PALETTE = ['#E9B949', '#F26B1D', '#F5A266', '#6BB8E8', '#8A9590', '#62E3B0', '#C9A7F5', '#F28CB1', '#7FD3E6', '#E46A6A', '#A3C76D', '#D9D2C5'];
+// Huisstijl eerst (goud, koraal, salie, leiblauw, grijsblauw, champagne, oudroze), daarna enkele zachte extra tinten.
+export const PALETTE = ['#B08D57', '#D08A78', '#9DB59A', '#8FA9C2', '#7C8FA3', '#C9AE7E', '#B79AA8', '#D9AE63', '#7E9A7A', '#B5654F', '#6F8FAF', '#DCC9A6'];

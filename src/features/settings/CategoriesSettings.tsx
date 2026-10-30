@@ -26,7 +26,7 @@ function Editor({ cat, onClose, nextOrder }: { cat: Category | null; onClose: ()
   const [f, setF] = useState({
     name: cat?.name ?? '',
     description: cat?.description ?? '',
-    color: cat?.color ?? '#62E3B0',
+    color: cat?.color ?? '#9DB59A',
     icon: cat?.icon ?? 'users',
     ring: cat?.ring ?? 3,
     avatar_size: cat?.avatar_size ?? 44,

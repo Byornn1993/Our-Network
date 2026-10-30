@@ -15,7 +15,7 @@ function Editor({ cat, onClose, nextOrder }: { cat: EventCategory | null; onClos
   const s = useStore();
   const { confirm, dialog } = useConfirm();
   const [name, setName] = useState(cat?.name ?? '');
-  const [color, setColor] = useState(cat?.color ?? '#C9A7F5');
+  const [color, setColor] = useState(cat?.color ?? '#8FA9C2');
   const [icon, setIcon] = useState(cat?.icon ?? 'sparkles');
   const [error, setError] = useState<string | null>(null);
   const used = cat ? s.events.filter((e) => e.event_category_id === cat.id).length : 0;

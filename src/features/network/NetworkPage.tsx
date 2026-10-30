@@ -41,7 +41,7 @@ export default function NetworkPage() {
           name: fullName(p),
           label: dup ? `${p.first_name} ${p.last_name![0]}.` : p.first_name,
           avatarPath: p.avatar_path,
-          color: c?.color ?? '#8A9590',
+          color: c?.color ?? '#7C8FA3',
           size: c?.avatar_size ?? 40,
           ring: ringOf(p, c),
           order: c?.display_order ?? 99,

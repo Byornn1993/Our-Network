@@ -49,7 +49,9 @@ export async function pull(db: OurNetworkDb, api: RemoteApi): Promise<{ pulled: 
   let conflicts = 0;
   for (const table of SYNC_TABLES) {
     const cursorKey = `cursor:${table}`;
-    const cursor = ((await db.meta.get(cursorKey))?.value as string | undefined) ?? null;
+    const stored = ((await db.meta.get(cursorKey))?.value as string | undefined) ?? null;
+    // Een cursor in de toekomst (verkeerde klok of tijdstempel) zou wijzigingen overslaan: dan alles opnieuw ophalen.
+    const cursor = stored && Date.parse(stored) <= Date.now() + OVERLAP_MS ? stored : null;
     const since = cursor ? new Date(Date.parse(cursor) - OVERLAP_MS).toISOString() : null;
     let maxSeen = cursor;
     for (let from = 0; ; from += PAGE) {
