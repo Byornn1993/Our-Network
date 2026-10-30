@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { tint } from '@/lib/color';
 import { ArrowDown, ArrowUp, Plus } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
 import type { EventCategory } from '@/lib/db/types';
@@ -63,7 +64,7 @@ function Editor({ cat, onClose, nextOrder }: { cat: EventCategory | null; onClos
     >
       <div className="space-y-4 p-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl" style={{ background: `${color}22`, color, boxShadow: `inset 0 0 0 1.5px ${color}` }}>
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl" style={{ background: tint(color, 0.13), color, boxShadow: `inset 0 0 0 1.5px ${color}` }}>
             <CatIcon name={icon} size={22} />
           </span>
           <input className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="Bv. Gezamenlijke uitstap" aria-label="Naam" maxLength={60} autoFocus={!cat} />
@@ -104,7 +105,7 @@ export default function EventTypesSettings() {
         {active.map((c, i) => (
           <li key={c.id} className="flex items-center gap-2 pr-1">
             <button type="button" onClick={() => setEdit(c)} className="flex min-h-[56px] min-w-0 flex-1 items-center gap-3 px-4 text-left hover:bg-surface">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${c.color}22`, color: c.color }}>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: tint(c.color, 0.13), color: c.color }}>
                 <CatIcon name={c.icon} size={18} />
               </span>
               <span className="min-w-0 flex-1">

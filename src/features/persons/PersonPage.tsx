@@ -186,8 +186,8 @@ export default function PersonPage() {
               {c.name}
             </Badge>
           )}
-          {c && <Badge color="#8A9590">{ringOf(person, c)}e ring</Badge>}
-          {person.archived_at && <Badge color="#F0B429">Gearchiveerd</Badge>}
+          {c && <Badge color="var(--c4)">{ringOf(person, c)}e ring</Badge>}
+          {person.archived_at && <Badge color="var(--warn)">Gearchiveerd</Badge>}
         </div>
         {person.description && <p className="mt-3 max-w-md text-sm text-muted">{person.description}</p>}
 

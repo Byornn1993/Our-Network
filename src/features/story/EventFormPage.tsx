@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react';
+import { tint } from '@/lib/color';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ImagePlus, Lock, Star, X } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
@@ -162,12 +163,12 @@ export default function EventFormPage() {
                       aria-pressed={on}
                       onClick={() => set('event_category_id', c.id)}
                       className={`flex min-h-[46px] items-center gap-2 rounded-xl border px-3 text-left text-sm transition ${on ? '' : 'border-border text-muted hover:text-text'}`}
-                      style={on ? { borderColor: c.color, background: `${c.color}1a`, color: 'var(--text)' } : undefined}
+                      style={on ? { borderColor: c.color, background: tint(c.color, 0.1), color: 'var(--text)' } : undefined}
                     >
                       <span style={{ color: c.color }}>
                         <CatIcon name={c.icon} size={16} />
                       </span>
-                      <span className="flex-1 leading-tight">{c.name}</span>
+                      <span className="min-w-0 flex-1 hyphens-auto break-words leading-tight">{c.name}</span>
                     </button>
                   );
                 })}

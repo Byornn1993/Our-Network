@@ -12,16 +12,16 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-accent text-accent-ink hover:brightness-105 active:brightness-95 font-semibold',
-  secondary: 'bg-surface-2 text-text border border-border hover:bg-[#1f2724]',
-  ghost: 'bg-transparent text-text hover:bg-surface-2',
+  primary: 'bg-accent text-accent-ink hover:bg-[color-mix(in_srgb,var(--accent)_88%,white)] active:brightness-95 font-semibold',
+  secondary: 'bg-card text-text border border-border hover:border-accent',
+  ghost: 'bg-transparent text-text hover:bg-champ/[.07]',
   danger: 'bg-danger/15 text-danger border border-danger/30 hover:bg-danger/25',
 };
 
 const sizes: Record<Size, string> = {
   sm: 'min-h-[36px] px-3 text-sm rounded-lg',
-  md: 'min-h-[44px] px-4 text-[15px] rounded-xl',
-  lg: 'min-h-[52px] px-5 text-base rounded-xl',
+  md: 'min-h-[44px] px-4 text-[15px] rounded-[12px]',
+  lg: 'min-h-[48px] px-5 text-base rounded-[12px]',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -33,7 +33,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       type={type}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${block ? 'w-full' : ''} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 transition duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${block ? 'w-full' : ''} ${className}`}
       {...rest}
     >
       {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden /> : icon}
@@ -48,7 +48,7 @@ export function IconButton({ label, className = '', children, ...rest }: ButtonH
       type="button"
       aria-label={label}
       title={label}
-      className={`tap inline-flex items-center justify-center rounded-xl text-muted transition hover:bg-surface-2 hover:text-text disabled:opacity-40 ${className}`}
+      className={`tap inline-flex items-center justify-center rounded-xl text-muted transition duration-150 hover:bg-champ/[.07] hover:text-text disabled:opacity-40 ${className}`}
       {...rest}
     >
       {children}

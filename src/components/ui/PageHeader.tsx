@@ -13,7 +13,7 @@ export function PageHeader({ title, back, actions, subtitle }: { title: ReactNod
         </IconButton>
       )}
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-[26px] font-bold tracking-tight md:text-3xl">{title}</h1>
+        <h1 className="truncate text-[27px] font-bold tracking-[-0.025em]">{title}</h1>
         {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-1">{actions}</div>}
@@ -30,7 +30,7 @@ export function Tabs<T extends string>({ value, onChange, tabs }: { value: T; on
           role="tab"
           aria-selected={value === t.value}
           onClick={() => onChange(t.value)}
-          className={`min-h-[40px] flex-1 rounded-lg px-3 text-sm font-medium transition ${value === t.value ? 'bg-surface-2 text-text shadow' : 'text-muted hover:text-text'}`}
+          className={`min-h-[40px] flex-1 rounded-lg px-3 text-sm font-medium transition duration-150 ${value === t.value ? 'bg-accent text-accent-ink' : 'text-muted hover:text-text'}`}
         >
           {t.label}
         </button>
@@ -45,7 +45,7 @@ export function Chip({ active, onClick, children }: { active?: boolean; onClick?
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`min-h-[36px] shrink-0 rounded-full border px-3 text-sm transition ${active ? 'border-accent/60 bg-primary-soft text-accent' : 'border-border text-muted hover:text-text'}`}
+      className={`min-h-[36px] shrink-0 rounded-full border px-3 text-sm transition duration-150 ${active ? 'border-accent bg-accent font-medium text-accent-ink' : 'border-border text-muted hover:border-accent hover:text-text'}`}
     >
       {children}
     </button>

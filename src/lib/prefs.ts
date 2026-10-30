@@ -40,7 +40,7 @@ let state = read();
 export function applyTheme(theme: Prefs['theme']) {
   const t = theme === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : theme;
   document.documentElement.dataset.theme = t;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'light' ? '#F4F7F6' : '#080D0C');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'light' ? '#F6F1E8' : '#101418');
 }
 
 export function setPref<K extends keyof Prefs>(key: K, value: Prefs[K]) {

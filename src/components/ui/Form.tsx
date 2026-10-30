@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { tint } from '@/lib/color';
 import { Check } from 'lucide-react';
 import type { DatePrecision } from '@/lib/db/types';
 import { monthName, normalizeToPrecision, todayIso } from '@/domain/dates';
@@ -45,8 +46,8 @@ export function Toggle({ checked, onChange, label, hint }: { checked: boolean; o
         <span className="block text-[15px]">{label}</span>
         {hint && <span className="block text-xs text-muted">{hint}</span>}
       </span>
-      <span className={`relative h-7 w-12 shrink-0 rounded-full transition ${checked ? 'bg-accent' : 'bg-surface-2 ring-1 ring-border'}`}>
-        <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${checked ? 'left-[22px]' : 'left-0.5'}`} />
+      <span className={`relative h-7 w-12 shrink-0 rounded-full transition ${checked ? 'bg-accent' : 'bg-champ/[.12] ring-1 ring-border'}`}>
+        <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-[#fbf6ee] shadow transition ${checked ? 'left-[22px]' : 'left-0.5'}`} />
       </span>
     </button>
   );
@@ -62,7 +63,7 @@ export function Segmented<T extends string>({ value, onChange, options, size = '
           role="radio"
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`flex-1 rounded-lg px-2 font-medium transition ${size === 'sm' ? 'min-h-[32px] text-xs' : 'min-h-[38px] text-sm'} ${value === o.value ? 'bg-card text-text shadow ring-1 ring-border' : 'text-muted hover:text-text'}`}
+          className={`flex-1 rounded-lg px-2 font-medium transition ${size === 'sm' ? 'min-h-[32px] text-xs' : 'min-h-[38px] text-sm'} ${value === o.value ? 'bg-accent text-accent-ink shadow' : 'text-muted hover:text-text'}`}
         >
           {o.label}
         </button>
@@ -179,7 +180,7 @@ export function IconPicker({ value, onChange, color }: { value: string; onChange
           aria-pressed={value === key}
           onClick={() => onChange(key)}
           className={`flex aspect-square items-center justify-center rounded-xl border transition ${value === key ? 'border-transparent' : 'border-border text-muted hover:text-text'}`}
-          style={value === key ? { background: `${color}26`, color, boxShadow: `inset 0 0 0 1.5px ${color}` } : undefined}
+          style={value === key ? { background: tint(color, 0.15), color, boxShadow: `inset 0 0 0 1.5px ${color}` } : undefined}
         >
           <CatIcon name={key} size={18} />
         </button>
@@ -193,7 +194,7 @@ export function Badge({ color, icon, children, size = 'md' }: { color: string; i
   return (
     <span
       className={`inline-flex max-w-full items-center gap-1 rounded-full font-medium ${size === 'sm' ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs'}`}
-      style={{ background: `${color}1f`, color, boxShadow: `inset 0 0 0 1px ${color}40` }}
+      style={{ background: tint(color, 0.12), color, boxShadow: `inset 0 0 0 1px ${tint(color, 0.25)}` }}
     >
       {icon && <CatIcon name={icon} size={size === 'sm' ? 11 : 13} />}
       <span className="truncate">{children}</span>

@@ -142,12 +142,12 @@ export default function EventPage() {
             </Badge>
           )}
           {e.is_highlight && (
-            <Badge color="#E9B949">
+            <Badge color="var(--accent)">
               <Star size={11} className="mr-0.5 inline fill-current" /> Belangrijk
             </Badge>
           )}
           {e.is_private && (
-            <Badge color="#9DAAA5">
+            <Badge color="var(--c4)">
               <Lock size={11} className="mr-0.5 inline" /> Privé
             </Badge>
           )}

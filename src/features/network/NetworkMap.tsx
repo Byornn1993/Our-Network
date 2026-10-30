@@ -294,9 +294,9 @@ export function NetworkMap({
       >
         <defs>
           <radialGradient id="hub-glow">
-            <stop offset="0" stopColor="#F5B544" stopOpacity="0.55" />
-            <stop offset="0.45" stopColor="#F28C28" stopOpacity="0.18" />
-            <stop offset="1" stopColor="#F28C28" stopOpacity="0" />
+            <stop offset="0" stopColor="var(--accent)" stopOpacity="0.5" />
+            <stop offset="0.45" stopColor="var(--accent)" stopOpacity="0.16" />
+            <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
           </radialGradient>
           <radialGradient id="map-bg">
             <stop offset="0" stopColor="var(--accent)" stopOpacity="0.06" />
@@ -340,7 +340,7 @@ export function NetworkMap({
           {/* middelpunt: Bjorn & Stephanie */}
           <g data-node="__hub" className="cursor-pointer" role="button" aria-label="Bjorn en Stephanie">
             <circle r={HUB_RADIUS * 2.1} fill="url(#hub-glow)" className="anim-glow" />
-            <circle r={HUB_RADIUS} fill="var(--card)" stroke="#F5B544" strokeWidth={3} />
+            <circle r={HUB_RADIUS} fill="var(--card)" stroke="var(--accent)" strokeWidth={3} />
             {bjorn && <SvgAvatar id="hub-b" path={bjorn.avatar_path} name={bjorn.name} size={50} color="var(--gold)" x={-22} y={-8} />}
             {steph && <SvgAvatar id="hub-s" path={steph.avatar_path} name={steph.name} size={50} color="var(--accent)" x={22} y={-8} />}
             <text y={36} textAnchor="middle" fontSize={11} fontWeight={600} fill="var(--text)">

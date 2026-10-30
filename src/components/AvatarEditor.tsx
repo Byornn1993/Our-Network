@@ -73,7 +73,7 @@ function CropSheet({ file, onCancel, onDone }: { file: File; onCancel: () => voi
             onPointerUp={() => (dragStart.current = null)}
           >
             {img && <img src={img.src} alt="" draggable={false} className="absolute max-w-none select-none" style={{ left, top, width: w * scale, height: h * scale }} />}
-            <div aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl" style={{ boxShadow: `inset 0 0 0 ${V}px rgba(0,0,0,0)`, background: 'radial-gradient(circle at center, transparent 69.5%, rgba(8,13,12,0.65) 70%)' }} />
+            <div aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl" style={{ boxShadow: `inset 0 0 0 ${V}px rgba(0,0,0,0)`, background: 'radial-gradient(circle at center, transparent 69.5%, rgba(8,10,12,0.6) 70%)' }} />
           </div>
         )}
         <label className="flex w-full max-w-[280px] items-center gap-3 text-sm text-muted">

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { tint } from '@/lib/color';
 import { Link, useNavigate } from 'react-router-dom';
 import { BookHeart, GitBranch, Lock, RotateCcw, Search, Unlock, UserPlus, X } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
@@ -206,7 +207,7 @@ export default function NetworkPage() {
         <div className="card no-scrollbar flex items-center gap-x-5 gap-y-2 overflow-x-auto px-4 py-2.5 md:flex-wrap md:py-3">
           {usedCategories.map((c) => (
             <span key={c.id} className="flex shrink-0 items-center gap-2 text-[13px] md:text-sm">
-              <span className="h-3 w-3 rounded-full" style={{ background: c.color, boxShadow: `0 0 8px ${c.color}80` }} />
+              <span className="h-3 w-3 rounded-full" style={{ background: c.color, boxShadow: `0 0 8px ${tint(c.color, 0.5)}` }} />
               <span>{c.name}</span>
               <span className="text-xs text-faint">({c.ring}e ring)</span>
             </span>

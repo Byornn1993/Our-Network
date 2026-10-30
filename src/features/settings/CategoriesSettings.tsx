@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { tint } from '@/lib/color';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowDown, ArrowUp, Plus } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
@@ -77,7 +78,7 @@ function Editor({ cat, onClose, nextOrder }: { cat: Category | null; onClose: ()
     >
       <div className="space-y-4 p-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: `${f.color}22`, color: f.color, boxShadow: `inset 0 0 0 1.5px ${f.color}` }}>
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: tint(f.color, 0.13), color: f.color, boxShadow: `inset 0 0 0 1.5px ${f.color}` }}>
             <CatIcon name={f.icon} size={22} />
           </span>
           <input className="field" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Bv. Schoonfamilie" aria-label="Naam" maxLength={60} autoFocus={!cat} />
@@ -151,7 +152,7 @@ export default function CategoriesSettings() {
         {active.map((c, i) => (
           <li key={c.id} className="flex items-center gap-2 pr-1">
             <button type="button" onClick={() => setEdit(c)} className="flex min-h-[60px] min-w-0 flex-1 items-center gap-3 px-4 text-left hover:bg-surface">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${c.color}22`, color: c.color }}>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: tint(c.color, 0.13), color: c.color }}>
                 <CatIcon name={c.icon} size={18} />
               </span>
               <span className="min-w-0 flex-1">

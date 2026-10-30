@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { tint } from '@/lib/color';
 import { Archive, ArrowRight, Lock, MapPin, RotateCcw, Sparkles, Star, UserPlus } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
 import type { EventPhoto } from '@/lib/db/types';
@@ -36,7 +37,7 @@ function EventCard({ item }: { item: Extract<TimelineItem, { kind: 'event' }> })
   return (
     <Link to={`/story/${e.id}`} className="card anim-fade-up block p-3.5 transition hover:border-accent/40">
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: `${color}22`, color }}>
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: tint(color, 0.13), color }}>
           <CatIcon name={type?.icon ?? 'sparkles'} size={17} />
         </span>
         <div className="min-w-0 flex-1">

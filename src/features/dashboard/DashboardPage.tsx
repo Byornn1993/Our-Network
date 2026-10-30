@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { tint } from '@/lib/color';
 import { BookHeart, Cake, CalendarPlus, ChevronRight, Sparkles, UserPlus, Users } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
 import { activePersons, networkStats } from '@/domain/stats';
@@ -50,26 +51,27 @@ function Donut({ parts, total }: { parts: { id: string; color: string; count: nu
   );
 }
 
-function StatCard({ label, value, color, icon, to }: { label: string; value: number; color?: string; icon?: React.ReactNode; to?: string }) {
+function StatCard({ label, value, color, icon, to, featured }: { label: string; value: number; color?: string; icon?: React.ReactNode; to?: string; featured?: boolean }) {
   const body = (
     <>
-      <div className="flex items-center gap-2 text-xs text-muted">
+      <div className={`flex items-start gap-2 text-[12.5px] font-medium leading-tight ${featured ? 'text-accent' : 'text-muted'}`}>
         {icon && (
-          <span className="flex h-6 w-6 items-center justify-center rounded-lg" style={{ background: color ? `${color}22` : 'var(--primary-soft)', color: color ?? 'var(--accent)' }}>
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg" style={{ background: color ? tint(color, 0.13) : 'var(--primary-soft)', color: color ?? 'var(--accent)' }}>
             {icon}
           </span>
         )}
-        <span className="truncate">{label}</span>
+        <span className="line-clamp-2 min-h-[2.5em] pt-[4px]">{label}</span>
       </div>
-      <p className="mt-2 text-[28px] font-bold leading-none tracking-tight">{value}</p>
+      <p className={`num mt-2 text-[28px] font-bold leading-none ${featured ? 'text-accent' : ''}`}>{value}</p>
     </>
   );
+  const cls = featured ? 'card border-accent/50 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--accent)_14%,var(--card)),var(--card))] shadow-[inset_0_2px_0_var(--accent)]' : 'card';
   return to ? (
-    <Link to={to} className="card block p-4 transition hover:border-accent/40">
+    <Link to={to} className={`${cls} block p-4 transition duration-150 hover:border-accent/60`}>
       {body}
     </Link>
   ) : (
-    <div className="card p-4">{body}</div>
+    <div className={`${cls} p-4`}>{body}</div>
   );
 }
 
@@ -105,14 +107,14 @@ export default function DashboardPage() {
       </header>
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <StatCard label="Totaal personen" value={st.total} icon={<Users size={14} />} to="/personen" />
+        <StatCard label="Totaal personen" value={st.total} icon={<Users size={14} />} to="/personen" featured />
         {st.byCategory.map((c) => {
           const cat = s.categoryById.get(c.id)!;
           return <StatCard key={c.id} label={c.name} value={c.count} color={c.color} icon={<CatIcon name={cat.icon} size={14} />} />;
         })}
-        <StatCard label="Gemeenschappelijk" value={st.common} icon={<Sparkles size={14} />} />
-        <StatCard label={`Contacten van ${b?.name ?? 'Bjorn'}`} value={st.bjorn} color="#E9B949" icon={<Users size={14} />} />
-        <StatCard label={`Contacten van ${stp?.name ?? 'Stephanie'}`} value={st.stephanie} color="#62E3B0" icon={<Users size={14} />} />
+        <StatCard label={'Gemeen­schappelijk'} value={st.common} icon={<Sparkles size={14} />} />
+        <StatCard label={`Contacten van ${b?.name ?? 'Bjorn'}`} value={st.bjorn} color="var(--c2)" icon={<Users size={14} />} />
+        <StatCard label={`Contacten van ${stp?.name ?? 'Stephanie'}`} value={st.stephanie} color="var(--accent)" icon={<Users size={14} />} />
         <StatCard label="Nieuwe personen dit jaar" value={st.newPersonsThisYear} icon={<UserPlus size={14} />} />
         <StatCard label="Momenten dit jaar" value={st.newEventsThisYear} icon={<CalendarPlus size={14} />} to={`/story/jaar/${new Date().getFullYear()}`} />
       </div>
@@ -181,7 +183,7 @@ export default function DashboardPage() {
 
         <section className="card p-4">
           <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-            <Cake size={16} className="text-[#F28CB1]" /> Verjaardagen
+            <Cake size={16} className="text-accent" /> Verjaardagen
           </h2>
           <ul className="mt-2 divide-y divide-border">
             {birthdays.length === 0 && <li className="py-2 text-sm text-muted">Geen verjaardagen in de komende weken (of nog geen geboortedata ingevuld).</li>}

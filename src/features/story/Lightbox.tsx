@@ -45,7 +45,7 @@ export function Lightbox({
   if (!photo) return null;
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex flex-col bg-black/95"
+      className="fixed inset-0 z-[70] flex flex-col bg-[rgba(8,10,12,.88)]"
       role="dialog"
       aria-modal="true"
       aria-label="Foto"

@@ -53,7 +53,7 @@ export async function cropSquare(img: HTMLImageElement, crop: SquareCrop, out = 
   canvas.height = size;
   const ctx = canvas.getContext('2d')!;
   ctx.imageSmoothingQuality = 'high';
-  ctx.fillStyle = '#151e1c';
+  ctx.fillStyle = '#2c3e50';
   ctx.fillRect(0, 0, size, size);
   ctx.drawImage(img, crop.x, crop.y, crop.size, crop.size, 0, 0, size, size);
   return canvasToJpeg(canvas, 0.86);

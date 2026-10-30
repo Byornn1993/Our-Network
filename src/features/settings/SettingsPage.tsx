@@ -8,14 +8,11 @@ import {
   Info,
   KeyRound,
   LogOut,
-  Monitor,
-  Moon,
   Palette,
   RefreshCw,
   RotateCcw,
   ShieldCheck,
   Smartphone,
-  Sun,
   Tags,
   User,
   Users,
@@ -29,6 +26,7 @@ import { useStore } from '@/lib/db/store';
 import { usePref } from '@/lib/prefs';
 import { resetPositions } from '@/lib/actions';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { ThemeButton } from '@/components/layout/ThemeButton';
 import { isArtifactMode, isLocalMode } from '@/lib/backend';
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
@@ -79,7 +77,6 @@ export default function SettingsPage() {
   const s = useStore();
   const { user, signOut } = useAuth();
   const { confirm, dialog } = useConfirm();
-  const [theme, setTheme] = usePref('theme');
   const [showRelations, setShowRelations] = usePref('mapShowRelations');
   const [showLabels, setShowLabels] = usePref('mapShowLabels');
   const [showChanges, setShowChanges] = usePref('storyShowChanges');
@@ -164,38 +161,7 @@ export default function SettingsPage() {
         </Group>
 
         <Group title="Weergave">
-          <div className="px-4 py-3">
-            <Segmented
-              value={theme}
-              onChange={setTheme}
-              options={[
-                {
-                  value: 'dark',
-                  label: (
-                    <span className="flex items-center justify-center gap-1.5">
-                      <Moon size={14} /> Donker
-                    </span>
-                  ),
-                },
-                {
-                  value: 'light',
-                  label: (
-                    <span className="flex items-center justify-center gap-1.5">
-                      <Sun size={14} /> Licht
-                    </span>
-                  ),
-                },
-                {
-                  value: 'auto',
-                  label: (
-                    <span className="flex items-center justify-center gap-1.5">
-                      <Monitor size={14} /> Auto
-                    </span>
-                  ),
-                },
-              ]}
-            />
-          </div>
+          <ThemeButton className="w-full px-4 text-[15px] text-text" />
         </Group>
 
         <Group title="Gegevens">

@@ -10,6 +10,7 @@ const head = html.match(/<head>([\s\S]*)<\/head>/)?.[1] ?? '';
 const body = html.match(/<body>([\s\S]*)<\/body>/)?.[1] ?? '';
 
 const keep = [
+  ...head.matchAll(/<style>[\s\S]*?<\/style>/g),
   ...head.matchAll(/<script>[\s\S]*?<\/script>/g),
   ...head.matchAll(/<script type="module"[^>]*><\/script>/g),
   ...head.matchAll(/<link rel="(?:modulepreload|stylesheet)"[^>]*>/g),

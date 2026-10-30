@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { tint } from '@/lib/color';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Camera, HeartHandshake, Home, PartyPopper, Sparkles, Star, TrendingUp, UserPlus } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
@@ -31,12 +32,12 @@ export default function YearReviewPage() {
     .slice(0, 12);
 
   const rows = [
-    { icon: UserPlus, n: r.newPeople.length, label: r.newPeople.length === 1 ? 'nieuwe persoon leren kennen' : 'nieuwe personen leren kennen', color: '#62E3B0' },
-    { icon: Home, n: r.byKind.family ?? 0, label: (r.byKind.family ?? 0) === 1 ? 'familiegebeurtenis' : 'familiegebeurtenissen', color: '#E9B949' },
-    { icon: Sparkles, n: r.byKind.memory ?? 0, label: (r.byKind.memory ?? 0) === 1 ? 'belangrijke herinnering' : 'belangrijke herinneringen', color: '#C9A7F5' },
-    { icon: HeartHandshake, n: (r.byKind.new_relationship ?? 0) + r.closer, label: (r.byKind.new_relationship ?? 0) + r.closer === 1 ? 'relatie die dichterbij kwam' : 'relaties die dichterbij kwamen', color: '#F26B1D' },
-    { icon: PartyPopper, n: r.byKind.friendship ?? 0, label: (r.byKind.friendship ?? 0) === 1 ? 'vriendschapsmoment' : 'vriendschapsmomenten', color: '#F5A266' },
-    { icon: Camera, n: r.photoCount, label: r.photoCount === 1 ? 'foto bewaard' : "foto's bewaard", color: '#6BB8E8' },
+    { icon: UserPlus, n: r.newPeople.length, label: r.newPeople.length === 1 ? 'nieuwe persoon leren kennen' : 'nieuwe personen leren kennen', color: 'var(--c3)' },
+    { icon: Home, n: r.byKind.family ?? 0, label: (r.byKind.family ?? 0) === 1 ? 'familiegebeurtenis' : 'familiegebeurtenissen', color: 'var(--c2)' },
+    { icon: Sparkles, n: r.byKind.memory ?? 0, label: (r.byKind.memory ?? 0) === 1 ? 'belangrijke herinnering' : 'belangrijke herinneringen', color: 'var(--c1)' },
+    { icon: HeartHandshake, n: (r.byKind.new_relationship ?? 0) + r.closer, label: (r.byKind.new_relationship ?? 0) + r.closer === 1 ? 'relatie die dichterbij kwam' : 'relaties die dichterbij kwamen', color: 'var(--c6)' },
+    { icon: PartyPopper, n: r.byKind.friendship ?? 0, label: (r.byKind.friendship ?? 0) === 1 ? 'vriendschapsmoment' : 'vriendschapsmomenten', color: 'var(--c5)' },
+    { icon: Camera, n: r.photoCount, label: r.photoCount === 1 ? 'foto bewaard' : "foto's bewaard", color: 'var(--c4)' },
   ].filter((x) => x.n > 0);
 
   return (
@@ -55,7 +56,7 @@ export default function YearReviewPage() {
       ) : (
         <>
           <section className="card relative mt-4 overflow-hidden p-5">
-            <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(233,185,73,0.18),transparent_70%)]" />
+            <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--accent)_22%,transparent),transparent_70%)]" />
             <h2 className="text-xl font-bold">Ons netwerk in {year}</h2>
             <p className="text-sm text-muted">
               {r.eventCount} {r.eventCount === 1 ? 'moment' : 'momenten'} bewaard
@@ -64,7 +65,7 @@ export default function YearReviewPage() {
               <ul className="mt-4 space-y-2.5">
                 {rows.map((x) => (
                   <li key={x.label} className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: `${x.color}22`, color: x.color }}>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: tint(x.color, 0.13), color: x.color }}>
                       <x.icon size={16} />
                     </span>
                     <span className="w-8 text-lg font-semibold tabular-nums">{x.n}</span>

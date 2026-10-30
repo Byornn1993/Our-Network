@@ -8,6 +8,8 @@ import { SyncIndicator } from './SyncIndicator';
 import { useSyncStatus } from '@/lib/sync/status';
 import { RelationshipSheet } from '@/features/persons/RelationshipSheet';
 import { isReadOnly } from '@/lib/backend';
+import { ThemeButton } from './ThemeButton';
+import { Toaster } from '@/components/ui/Toast';
 
 const MOBILE_NAV = [
   { to: '/netwerk', label: 'Netwerk', icon: Network },
@@ -40,8 +42,8 @@ export function AddMenu({ open, onClose }: { open: boolean; onClose: () => void 
       <Sheet open={open} onClose={onClose} title="Toevoegen">
         <div className="grid grid-cols-2 gap-2 p-3">
           {items.map((it) => (
-            <button key={it.label} type="button" onClick={it.onClick} className="card flex min-h-[96px] flex-col items-start gap-2 p-3 text-left transition hover:border-accent/50">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-accent">
+            <button key={it.label} type="button" onClick={it.onClick} className="card flex min-h-[96px] flex-col items-start gap-2 p-3 text-left transition duration-150 hover:border-accent/60">
+              <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-primary-soft text-accent">
                 <it.icon size={19} />
               </span>
               <span>
@@ -62,12 +64,12 @@ function SideLink({ to, label, icon: Icon }: { to: string; label: string; icon: 
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex min-h-[44px] items-center gap-3 rounded-xl px-3 text-sm font-medium transition md:flex-col md:justify-center md:gap-1 md:px-1 md:py-2 md:text-[11px] lg:flex-row lg:justify-start lg:gap-3 lg:px-3 lg:text-sm ${
-          isActive ? 'bg-primary-soft text-accent' : 'text-muted hover:bg-surface hover:text-text'
+        `group flex min-h-[44px] items-center gap-3 rounded-xl px-3 text-sm font-medium transition duration-150 md:flex-col md:justify-center md:gap-1 md:px-1 md:py-2 md:text-[11px] lg:flex-row lg:justify-start lg:gap-3 lg:px-3 lg:text-sm ${
+          isActive ? 'bg-primary-soft text-text shadow-[inset_3px_0_0_var(--accent)]' : 'text-muted hover:bg-champ/[.07] hover:text-text'
         }`
       }
     >
-      <Icon size={20} />
+      <Icon size={20} className="group-aria-[current=page]:text-accent" />
       <span>{label}</span>
     </NavLink>
   );
@@ -75,8 +77,8 @@ function SideLink({ to, label, icon: Icon }: { to: string; label: string; icon: 
 
 function BottomLink({ to, label, icon: Icon }: { to: string; label: string; icon: typeof Users }) {
   return (
-    <NavLink to={to} className={({ isActive }) => `flex min-h-[48px] flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${isActive ? 'text-accent' : 'text-muted'}`}>
-      <Icon size={22} />
+    <NavLink to={to} className={({ isActive }) => `group flex min-h-[48px] flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${isActive ? 'text-text' : 'text-muted'}`}>
+      <Icon size={22} className="group-aria-[current=page]:text-accent" />
       {label}
     </NavLink>
   );
@@ -91,7 +93,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
   return (
     <div className="min-h-dvh md:flex" style={{ paddingLeft: 'var(--safe-left)', paddingRight: 'var(--safe-right)' }}>
       {/* Zijbalk: rail op tablet, volledige zijbalk op desktop */}
-      <aside className="sticky top-0 z-20 hidden h-dvh shrink-0 flex-col border-r border-border bg-bg px-2 py-4 md:flex md:w-[88px] lg:w-[244px] lg:px-4">
+      <aside className="sticky top-0 z-20 hidden h-dvh shrink-0 flex-col border-r border-line-2 bg-side px-2 py-4 md:flex md:w-[88px] lg:w-[244px] lg:px-4">
         <div className="mb-6 flex items-center gap-3 px-1 md:justify-center lg:justify-start">
           <Logo size={38} />
           <div className="hidden lg:block">
@@ -106,7 +108,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
           <button
             type="button"
             onClick={() => setAddOpen(true)}
-            className="mt-2 flex min-h-[44px] items-center gap-3 rounded-xl bg-accent px-3 text-sm font-semibold text-accent-ink transition hover:brightness-105 md:flex-col md:justify-center md:gap-1 md:px-1 md:py-2 md:text-[11px] lg:flex-row lg:justify-start lg:gap-3 lg:px-3 lg:text-sm"
+            className="mt-2 flex min-h-[44px] items-center gap-3 rounded-xl bg-accent px-3 text-sm font-semibold text-accent-ink transition duration-150 hover:bg-[color-mix(in_srgb,var(--accent)_88%,white)] md:flex-col md:justify-center md:gap-1 md:px-1 md:py-2 md:text-[11px] lg:flex-row lg:justify-start lg:gap-3 lg:px-3 lg:text-sm"
           >
             <Plus size={20} />
             Toevoegen
@@ -114,6 +116,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
         </nav>
         <div className="mt-auto flex flex-col gap-2">
           <SyncIndicator />
+          <ThemeButton className="px-3 md:justify-center md:px-1 lg:justify-start lg:px-3" labelClassName="md:hidden lg:inline" />
           <SideLink to="/instellingen" label="Instellingen" icon={Settings} />
         </div>
       </aside>
@@ -143,15 +146,15 @@ export function AppShell({ children }: { children?: ReactNode }) {
       {/* Onderste navigatie op mobiel: Netwerk · Personen · Toevoegen · Instellingen */}
       <nav
         aria-label="Hoofdnavigatie"
-        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-bg/95 backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line-2 bg-side md:hidden"
         style={{ paddingBottom: 'var(--safe-bottom)', height: 'calc(var(--nav-h) + var(--safe-bottom))' }}
       >
         {MOBILE_NAV.map((n) => (
           <BottomLink key={n.to} {...n} />
         ))}
         <button type="button" onClick={() => setAddOpen(true)} className="flex min-h-[48px] flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-current">
-            <Plus size={18} />
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-accent-ink shadow-[0_4px_14px_-2px_color-mix(in_srgb,var(--accent)_55%,transparent)]">
+            <Plus size={18} strokeWidth={2.4} />
           </span>
           Toevoegen
         </button>
@@ -159,6 +162,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
       </nav>
 
       <AddMenu open={addOpen} onClose={() => setAddOpen(false)} />
+      <Toaster />
     </div>
   );
 }
