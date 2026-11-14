@@ -5,7 +5,9 @@ Pas een uitgevoerd bestand nooit meer aan: maak een nieuw bestand met het volgen
 
 | Bestand | Uitgevoerd op | Door |
 |---|---|---|
-| 001_schema.sql | | |
-| 002_rls.sql | | |
-| 003_defaults.sql | | |
-| 004_storage.sql | | |
+| 001_schema.sql | 2026-11-14 (via setup-productie.sql) | Claude, op vraag van Bjorn |
+| 002_rls.sql | 2026-11-14 (via setup-productie.sql) | Claude, op vraag van Bjorn |
+| 003_defaults.sql | 2026-11-14 (via setup-productie.sql) | Claude, op vraag van Bjorn |
+| 004_storage.sql | 2026-11-14 (via setup-productie.sql) | Claude, op vraag van Bjorn |
+
+Controle na installatie (2026-11-14): 423 objecten van Be Strong, Boodschappenlijst en storage hebben exact dezelfde vingerafdruk als vóór de installatie; 16 `net_`-tabellen, allemaal met RLS, geen rechten voor `anon`; bucket `net-photos` is privé.
