@@ -27,6 +27,17 @@ export default function NetworkPage() {
 
   const active = useMemo(() => s.persons.filter((p) => !p.archived_at), [s.persons]);
 
+  // Partners: elk koppel komt naast elkaar op de kaart.
+  const partnerOf = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const r of s.relationships) {
+      if (r.relationship_type !== 'partner') continue;
+      if (!m.has(r.person_id)) m.set(r.person_id, r.related_person_id);
+      if (!m.has(r.related_person_id)) m.set(r.related_person_id, r.person_id);
+    }
+    return m;
+  }, [s.relationships]);
+
   const mapPersons: MapPerson[] = useMemo(() => {
     const firstNames = new Map<string, number>();
     active.forEach((p) => firstNames.set(p.first_name, (firstNames.get(p.first_name) ?? 0) + 1));
@@ -45,18 +56,21 @@ export default function NetworkPage() {
           size: c?.avatar_size ?? 40,
           ring: ringOf(p, c),
           order: c?.display_order ?? 99,
+          partnerId: partnerOf.get(p.id) ?? null,
           side,
           subtitle: [c?.name, side !== 'none' ? `via ${connectionLabel(side, s.profiles)}` : null, p.description].filter(Boolean).join(' · '),
         };
       });
-  }, [active, hidden, s.categoryById, s.person_connections, s.profiles]);
+  }, [active, hidden, partnerOf, s.categoryById, s.person_connections, s.profiles]);
 
   const manual = useMemo(() => new Map(s.network_positions.map((p) => [p.person_id, { x: p.x_position, y: p.y_position }])), [s.network_positions]);
 
+  // Partners zijn altijd verbonden; andere relaties enkel als "relaties tonen" aan staat.
   const relations = useMemo(() => {
-    if (!showRelations) return [];
     const shown = new Set(mapPersons.map((p) => p.id));
-    return s.relationships.filter((r) => shown.has(r.person_id) && shown.has(r.related_person_id)).map((r) => ({ a: r.person_id, b: r.related_person_id }));
+    return s.relationships
+      .filter((r) => shown.has(r.person_id) && shown.has(r.related_person_id) && (showRelations || r.relationship_type === 'partner'))
+      .map((r) => ({ a: r.person_id, b: r.related_person_id, partner: r.relationship_type === 'partner' }));
   }, [showRelations, mapPersons, s.relationships]);
 
   const results = query.trim() ? active.filter((p) => matchesSearch(p, query)).slice(0, 6) : [];

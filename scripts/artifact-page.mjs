@@ -17,7 +17,7 @@ const keep = [
 ].map((m) => m[0]);
 
 const page = [
-  '<title>Our Network</title>',
+  '<title>B Netwerk</title>',
   '<link rel="icon" type="image/svg+xml" href="./favicon.svg">',
   // Het Artifact-skelet zet de veilige marges (notch, home-indicator) al op :root; de app mag ze bovenaan niet
   // nog eens toepassen. Vaste balken onderaan (navigatie) tellen ze wel zelf mee.

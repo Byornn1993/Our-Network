@@ -26,6 +26,30 @@ describe('netwerklayout', () => {
     for (const p of l.placed.values()) expect(Math.hypot(p.x, p.y)).toBeGreaterThan(HUB_RADIUS + 40);
   });
 
+  it('partners staan naast elkaar, ook alfabetisch ver uit elkaar en in een volle ring', () => {
+    const others = Array.from({ length: 40 }, (_, i) => node(`m${String(i).padStart(2, '0')}`, 3, { label: `M${i}` }));
+    const nodes = [node('aa', 3, { label: 'Anna', partner: 'zz' }), node('zz', 3, { label: 'Zeno', partner: 'aa' }), ...others];
+    const l = layoutNetwork(nodes);
+    const a = l.placed.get('aa')!;
+    const z = l.placed.get('zz')!;
+    const dist = Math.hypot(a.x - z.x, a.y - z.y);
+    // dichter bij elkaar dan bij wie dan ook anders
+    const nearestOther = Math.min(...others.map((o) => l.placed.get(o.id)!).map((p) => Math.hypot(a.x - p.x, a.y - p.y)));
+    expect(dist).toBeLessThanOrEqual(nearestOther + 1);
+    expect(Math.hypot(a.x, a.y)).toBeCloseTo(Math.hypot(z.x, z.y), 0); // zelfde (sub-)ring
+  });
+
+  it('partners uit verschillende ringen komen samen op de binnenste ring', () => {
+    const l = layoutNetwork([node('fam', 1, { partner: 'vr' }), node('vr', 3, { partner: 'fam' }), node('x', 1), node('y', 3)]);
+    const vr = l.placed.get('vr')!;
+    expect(Math.hypot(vr.x, vr.y)).toBeCloseTo(BASE_RADII[1], 0);
+    expect(vr.ring).toBe(1);
+    // ook in een bijna lege ring vlak naast elkaar, niet over de hele cirkel verspreid
+    const fam = l.placed.get('fam')!;
+    expect(Math.hypot(fam.x - vr.x, fam.y - vr.y)).toBeLessThan(90);
+    expect(minClearance([...l.placed.values()])).toBeGreaterThan(4);
+  });
+
   it('volle binnenringen duwen buitenringen naar buiten', () => {
     const many = Array.from({ length: 60 }, (_, i) => node(`f${i}`, 1));
     const l = layoutNetwork([...many, node('far', 4)]);

@@ -20,6 +20,8 @@ export interface MapPerson {
   size: number;
   ring: Ring;
   order: number;
+  /** Partner (op de kaart meteen ernaast). */
+  partnerId?: string | null;
   side: ConnectionSide;
   subtitle: string;
 }
@@ -81,7 +83,7 @@ export function NetworkMap({
 }: {
   persons: MapPerson[];
   manual: Map<string, { x: number; y: number }>;
-  relations: { a: string; b: string }[];
+  relations: { a: string; b: string; partner?: boolean }[];
   profiles: Profile[];
   editMode: boolean;
   showLabels: boolean;
@@ -102,7 +104,7 @@ export function NetworkMap({
   const userMoved = useRef(false);
 
   const layout = useMemo(
-    () => layoutNetwork(persons.map((p) => ({ id: p.id, ring: p.ring, size: p.size, label: p.label, order: p.order, manual: manual.get(p.id) ?? null }))),
+    () => layoutNetwork(persons.map((p) => ({ id: p.id, ring: p.ring, size: p.size, label: p.label, order: p.order, partner: p.partnerId, manual: manual.get(p.id) ?? null }))),
     [persons, manual],
   );
 
@@ -316,10 +318,26 @@ export function NetworkMap({
           ))}
 
           {/* onderlinge relaties */}
-          {relations.map(({ a, b }) => {
+          {relations.map(({ a, b, partner }) => {
             const pa = pos(a);
             const pb = pos(b);
             if (!pa || !pb) return null;
+            if (partner) {
+              // Koppel: lijn tussen beide foto's met een hartje in het midden.
+              const mx = (pa.x + pb.x) / 2;
+              const my = (pa.y + pb.y) / 2;
+              return (
+                <g key={`${a}-${b}`} aria-hidden>
+                  <line x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y} stroke="var(--champ)" strokeOpacity={0.8} strokeWidth={2} strokeLinecap="round" />
+                  <circle cx={mx} cy={my} r={8} fill="var(--bg)" stroke="var(--champ)" strokeWidth={1.2} />
+                  <path
+                    transform={`translate(${mx - 4.5} ${my - 4})`}
+                    d="M4.5 8 C1.5 5.8 0 4.3 0 2.6 0 1.1 1.1 0 2.4 0 3.3 0 4 .5 4.5 1.2 5 .5 5.7 0 6.6 0 7.9 0 9 1.1 9 2.6 9 4.3 7.5 5.8 4.5 8Z"
+                    fill="var(--accent)"
+                  />
+                </g>
+              );
+            }
             return <line key={`${a}-${b}`} x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y} stroke="var(--muted)" strokeOpacity={0.35} strokeWidth={1} strokeDasharray="4 5" />;
           })}
 

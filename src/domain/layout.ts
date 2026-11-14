@@ -1,6 +1,7 @@
 // Automatische positionering van personen rond het middelpunt (Bjorn & Stephanie).
 //  * Elke persoon staat op de ring van zijn/haar categorie (of de handmatige afstand).
 //  * Binnen een ring staan categorieën samen (clusters), daarna alfabetisch.
+//  * Partners staan altijd naast elkaar: op dezelfde (binnenste van hun twee) ring en sub-ring.
 //  * Te vol? Dan wordt de ring verdeeld over meerdere sub-ringen (zigzag), en schuiven de buitenste
 //    ringen mee naar buiten. Zo overlappen foto's en namen nooit.
 //  * Handmatig verplaatste personen blijven exact staan; automatische personen wijken voor hen uit.
@@ -17,6 +18,8 @@ export interface LayoutNode {
   /** Sorteervolgorde van de categorie (clusters). */
   order: number;
   manual?: { x: number; y: number } | null;
+  /** Id van de partner: die komt er meteen naast te staan. */
+  partner?: string | null;
 }
 
 export interface Placed {
@@ -52,8 +55,28 @@ function minDistance(a: { size: number }, b: { size: number }): number {
   return (a.size + b.size) / 2 + LABEL_PAD;
 }
 
+const byKey = (a: LayoutNode, b: LayoutNode) => a.order - b.order || a.label.localeCompare(b.label, 'nl');
+
+/** Koppels (beide automatisch geplaatst) krijgen de ring van wie het dichtst bij het middelpunt staat. */
+function pairUp(nodes: LayoutNode[]): { ringOf: Map<string, Ring>; partnerOf: Map<string, string> } {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const ringOf = new Map(nodes.map((n) => [n.id, n.ring]));
+  const partnerOf = new Map<string, string>();
+  for (const n of nodes) {
+    const p = n.partner ? byId.get(n.partner) : undefined;
+    if (!p || p === n || n.manual || p.manual || partnerOf.has(n.id) || partnerOf.has(p.id)) continue;
+    partnerOf.set(n.id, p.id);
+    partnerOf.set(p.id, n.id);
+    const ring = Math.min(n.ring, p.ring) as Ring;
+    ringOf.set(n.id, ring);
+    ringOf.set(p.id, ring);
+  }
+  return { ringOf, partnerOf };
+}
+
 export function layoutNetwork(nodes: LayoutNode[]): Layout {
   const placed = new Map<string, Placed>();
+  const { ringOf, partnerOf } = pairUp(nodes);
   for (const n of nodes) if (n.manual) placed.set(n.id, { id: n.id, x: n.manual.x, y: n.manual.y, size: n.size, ring: n.ring, manual: true });
 
   const ringRadii: number[] = [];
@@ -61,29 +84,46 @@ export function layoutNetwork(nodes: LayoutNode[]): Layout {
   const autoByRing = new Map<Ring, { node: LayoutNode; radius: number; angle: number }[]>();
 
   for (const ring of [1, 2, 3, 4] as Ring[]) {
-    const autos = nodes
-      .filter((n) => n.ring === ring && !n.manual)
-      .sort((a, b) => a.order - b.order || a.label.localeCompare(b.label, 'nl'));
+    const inRing = nodes.filter((n) => ringOf.get(n.id) === ring && !n.manual).sort(byKey);
+    // Eenheden: een alleenstaande persoon, of een koppel (gesorteerd op wie eerst komt).
+    const units: LayoutNode[][] = [];
+    const seen = new Set<string>();
+    for (const n of inRing) {
+      if (seen.has(n.id)) continue;
+      const unit = [n, ...inRing.filter((m) => m.id === partnerOf.get(n.id))];
+      unit.forEach((m) => seen.add(m.id));
+      units.push(unit);
+    }
+    const autos = units.flat();
     const radius = Math.max(BASE_RADII[ring], outer + MIN_RING_GAP);
     ringRadii.push(radius);
     if (!autos.length) {
       outer = radius;
       continue;
     }
-    const widths = autos.map(footprint);
-    const total = widths.reduce((s, w) => s + w, 0);
+    const total = autos.reduce((s, n) => s + footprint(n), 0);
     // Aantal sub-ringen zodat elke sub-ring past (elke sub-ring krijgt elke k-de persoon).
     let k = 1;
     while (total / k > 2 * Math.PI * (radius + (k - 1) * SUB_GAP * 0.5) && k < 8) k++;
+    // Sub-ring per eenheid, zodat een koppel samen op dezelfde sub-ring staat.
+    const subOf = new Map(units.flatMap((u, i) => u.map((n) => [n.id, i % k] as const)));
     const start = -Math.PI / 2 + (ring - 1) * 0.37;
     let cum = 0;
     const list: { node: LayoutNode; radius: number; angle: number }[] = [];
-    autos.forEach((node, i) => {
-      const angle = start + (2 * Math.PI * (cum + widths[i]! / 2)) / total;
-      cum += widths[i]!;
-      const sub = i % k;
-      list.push({ node, radius: radius + sub * SUB_GAP, angle });
-    });
+    // Elke eenheid krijgt een stuk van de ring volgens haar breedte. Een koppel staat in dat stuk
+    // vlak tegen elkaar (vaste afstand), niet verspreid zoals losse personen.
+    for (const unit of units) {
+      const w = unit.reduce((s, n) => s + footprint(n), 0);
+      const center = start + (2 * Math.PI * (cum + w / 2)) / total;
+      cum += w;
+      const r = radius + (subOf.get(unit[0]!.id) ?? 0) * SUB_GAP;
+      if (unit.length === 1) list.push({ node: unit[0]!, radius: r, angle: center });
+      else {
+        const [a, b] = unit as [LayoutNode, LayoutNode];
+        const half = Math.max((footprint(a) + footprint(b)) / 2, minDistance(a, b) + 6) / 2 / r;
+        list.push({ node: a, radius: r, angle: center - half }, { node: b, radius: r, angle: center + half });
+      }
+    }
     autoByRing.set(ring, list);
     outer = radius + (k - 1) * SUB_GAP;
   }
@@ -128,7 +168,7 @@ export function layoutNetwork(nodes: LayoutNode[]): Layout {
       x: Math.cos(a.angle) * a.radius,
       y: Math.sin(a.angle) * a.radius,
       size: a.node.size,
-      ring: a.node.ring,
+      ring: ringOf.get(a.node.id) ?? a.node.ring,
       manual: false,
     });
   }
