@@ -40,9 +40,13 @@ export interface Layout {
 }
 
 export const HUB_RADIUS = 66;
-export const BASE_RADII: Record<Ring, number> = { 1: 135, 2: 205, 3: 275, 4: 345 };
+export const BASE_RADII: Record<Ring, number> = { 1: 165, 2: 255, 3: 345, 4: 435 };
 const SUB_GAP = 64; // afstand tussen sub-ringen (foto + naam)
-const MIN_RING_GAP = 66;
+const MIN_RING_GAP = 84;
+/** Ademruimte: een ring krijgt minstens zoveel keer de omtrek die de personen samen innemen. */
+const BREATHING = 1.5;
+/** Zo ver mag een ring meegroeien voor ademruimte; daarna komen er sub-ringen bij. */
+const MAX_GROW = 1.9;
 const LABEL_PAD = 24; // ruimte voor de naam onder de foto
 
 /** Hoeveel boog (in eenheden) een persoon nodig heeft: foto of naam, wat het breedst is. */
@@ -95,13 +99,14 @@ export function layoutNetwork(nodes: LayoutNode[]): Layout {
       units.push(unit);
     }
     const autos = units.flat();
-    const radius = Math.max(BASE_RADII[ring], outer + MIN_RING_GAP);
+    const total = autos.reduce((s, n) => s + footprint(n), 0);
+    const roomy = Math.min((total * BREATHING) / (2 * Math.PI), BASE_RADII[ring] * MAX_GROW);
+    const radius = Math.max(BASE_RADII[ring], outer + MIN_RING_GAP, roomy);
     ringRadii.push(radius);
     if (!autos.length) {
       outer = radius;
       continue;
     }
-    const total = autos.reduce((s, n) => s + footprint(n), 0);
     // Aantal sub-ringen zodat elke sub-ring past (elke sub-ring krijgt elke k-de persoon).
     let k = 1;
     while (total / k > 2 * Math.PI * (radius + (k - 1) * SUB_GAP * 0.5) && k < 8) k++;
@@ -173,7 +178,8 @@ export function layoutNetwork(nodes: LayoutNode[]): Layout {
     });
   }
 
-  let extent = (ringRadii[3] ?? BASE_RADII[4]) + 40;
+  // Inzoomen op wie er echt staat: lege buitenringen tellen niet mee.
+  let extent = (ringRadii[0] ?? BASE_RADII[1]) + 60;
   for (const p of placed.values()) extent = Math.max(extent, Math.abs(p.x) + p.size, Math.abs(p.y) + p.size + LABEL_PAD);
   return { placed, ringRadii, extent };
 }

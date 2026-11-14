@@ -34,6 +34,8 @@ interface View {
 
 const LINE: Record<Ring, { w: number; o: number }> = { 1: { w: 2.6, o: 0.9 }, 2: { w: 2, o: 0.72 }, 3: { w: 1.3, o: 0.5 }, 4: { w: 0.9, o: 0.32 } };
 const CONTROLS_W = 48;
+/** Onderaan ligt de legende over de kaart: daar zetten we niemand. */
+const LEGEND_H = 64;
 const MIN_K = 0.25;
 const MAX_K = 3;
 const clampK = (k: number) => Math.min(MAX_K, Math.max(MIN_K, k));
@@ -112,8 +114,9 @@ export function NetworkMap({
     (w: number, h: number): View => {
       // Op smalle schermen houden we rechts ruimte vrij voor de bedieningsknoppen.
       const usable = w < 640 ? w - CONTROLS_W : w;
-      const k = clampK(Math.min(usable, h) / (2 * layout.extent + 20));
-      return { x: usable / 2, y: h / 2, k };
+      const usableH = Math.max(h - LEGEND_H, h * 0.6);
+      const k = clampK(Math.min(usable, usableH) / (2 * layout.extent + 20));
+      return { x: usable / 2, y: usableH / 2, k };
     },
     [layout.extent],
   );
