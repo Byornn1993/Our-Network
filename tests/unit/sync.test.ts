@@ -121,13 +121,13 @@ describe('sync tussen twee toestellen', () => {
     const server = fakeServer();
     const a = device();
     await syncOnce(a, server.api);
-    const id = await savePerson(await storeOf(a), input('Georgette', KENNIS), { connections: [] });
-    const later = input('Georgette', KENNIS, { first_met_at: '1993-05-01', first_met_precision: 'day' });
+    const id = await savePerson(await storeOf(a), input('Anna', KENNIS), { connections: [] });
+    const later = input('Anna', KENNIS, { first_met_at: '1990-05-01', first_met_precision: 'day' });
     await savePerson(await storeOf(a), later, { id, connections: [], createFirstMeeting: true });
     await savePerson(await storeOf(a), later, { id, connections: [], createFirstMeeting: true });
     await syncOnce(a, server.api);
-    expect(server.rows('events').map((e) => e.event_date)).toEqual(['1993-05-01']);
-    expect(firstMeetingOf(await storeOf(a), id)?.event_date).toBe('1993-05-01');
+    expect(server.rows('events').map((e) => e.event_date)).toEqual(['1990-05-01']);
+    expect(firstMeetingOf(await storeOf(a), id)?.event_date).toBe('1990-05-01');
   });
 
   it('categoriewijziging overschrijft niets: de oude categorie blijft in de geschiedenis', async () => {
@@ -244,12 +244,12 @@ describe('sync tussen twee toestellen', () => {
     const server = fakeServer();
     const a = device();
     await syncOnce(a, server.api);
-    const pid = await savePerson(await storeOf(a), input('Mam', VRIEND, { avatar_path: 'f55a22e8762b18744820b78a305bb831' }), { connections: [] });
+    const pid = await savePerson(await storeOf(a), input('Moeder', VRIEND, { avatar_path: '0123456789abcdef0123456789abcdef' }), { connections: [] });
     const backup = buildBackup(await storeOf(a));
     const profile = (backup.tables.profiles as Record<string, unknown>[]).find((p) => p.id === P1)!;
-    Object.assign(profile, { user_id: 'u_evh_LdvhQreFD0qLaxyMHQ', name: 'Bjorn W', updated_at: '2026-10-27T11:12:36.445Z' });
+    Object.assign(profile, { user_id: 'u_AAAAAAAAAAAAAAAAAAAAAA', name: 'Bjorn W', updated_at: '2026-10-27T11:12:36.445Z' });
     const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-    const json = JSON.stringify({ ...backup, version: 2, files: { f55a22e8762b18744820b78a305bb831: png } });
+    const json = JSON.stringify({ ...backup, version: 2, files: { '0123456789abcdef0123456789abcdef': png } });
 
     // Nieuw toestel met de standaardinhoud van de server (nieuwer dan de back-up): zonder "gaat voor" overgeslagen.
     const b = device();
