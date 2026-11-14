@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { tint } from '@/lib/color';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookHeart, GitBranch, Lock, RotateCcw, Search, Unlock, UserPlus, X } from 'lucide-react';
+import { BookHeart, Check, GitBranch, Move, RotateCcw, Search, UserPlus, X } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
 import { usePref } from '@/lib/prefs';
 import { connectionLabel, connectionSide, fullName, matchesSearch, ringOf } from '@/domain/people';
@@ -12,6 +12,7 @@ import { Chip } from '@/components/ui/PageHeader';
 import { Avatar } from '@/components/Avatar';
 import { NetworkMap, type MapPerson } from './NetworkMap';
 import { SubNav } from './SubNav';
+import { isReadOnly } from '@/lib/backend';
 
 export default function NetworkPage() {
   const s = useStore();
@@ -189,21 +190,31 @@ export default function NetworkPage() {
               <IconButton label={showRelations ? 'Onderlinge relaties verbergen' : 'Onderlinge relaties tonen'} onClick={() => setShowRelations(!showRelations)} className={showRelations ? 'text-accent' : ''}>
                 <GitBranch size={17} />
               </IconButton>
-              <IconButton label={editMode ? 'Posities vergrendelen' : 'Personen verslepen'} onClick={() => setEditMode(!editMode)} className={editMode ? 'bg-accent text-accent-ink hover:bg-accent hover:text-accent-ink' : ''}>
-                {editMode ? <Unlock size={17} /> : <Lock size={17} />}
-              </IconButton>
             </>
           }
         />
 
-        {editMode && (
-          <div className="absolute inset-x-3 top-2 mx-auto flex max-w-md items-center gap-2 rounded-2xl border border-accent/40 bg-card/95 p-2 pl-3 text-sm shadow-xl backdrop-blur">
-            <span className="flex-1">Sleep personen naar een nieuwe plek. Posities worden bewaard.</span>
-            <Button size="sm" onClick={() => void reset()} icon={<RotateCcw size={14} />}>
-              Reset
+        {/* Zelf verplaatsen: duidelijke knop bovenaan de kaart */}
+        {active.length > 0 &&
+          !isReadOnly() &&
+          (editMode ? (
+            <div className="absolute inset-x-3 top-2 mx-auto flex max-w-md items-center gap-2 rounded-2xl border border-accent/50 bg-card/95 p-2 pl-3 text-sm shadow-xl backdrop-blur">
+              <Move size={16} className="shrink-0 text-accent" />
+              <span className="min-w-0 flex-1 leading-tight">
+                Sleep iemand naar een nieuwe plek<span className="hidden sm:inline">. Wordt bewaard, ook voor de ander</span>.
+              </span>
+              <Button size="sm" onClick={() => void reset()} icon={<RotateCcw size={14} />} aria-label="Alle posities terugzetten">
+                Reset
+              </Button>
+              <Button size="sm" variant="primary" onClick={() => setEditMode(false)} icon={<Check size={14} />}>
+                Klaar
+              </Button>
+            </div>
+          ) : (
+            <Button size="sm" className="absolute left-3 top-2 shadow-lg md:left-4" onClick={() => setEditMode(true)} icon={<Move size={15} />}>
+              Verplaatsen
             </Button>
-          </div>
-        )}
+          ))}
 
         {active.length === 0 && (
           <div className="absolute inset-x-4 bottom-4 mx-auto max-w-sm rounded-2xl border border-border bg-card/95 p-4 text-center shadow-xl backdrop-blur">

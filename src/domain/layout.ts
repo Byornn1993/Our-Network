@@ -40,13 +40,13 @@ export interface Layout {
 }
 
 export const HUB_RADIUS = 66;
-export const BASE_RADII: Record<Ring, number> = { 1: 165, 2: 255, 3: 345, 4: 435 };
+export const BASE_RADII: Record<Ring, number> = { 1: 195, 2: 305, 3: 415, 4: 525 };
 const SUB_GAP = 64; // afstand tussen sub-ringen (foto + naam)
-const MIN_RING_GAP = 84;
+const MIN_RING_GAP = 105;
 /** Ademruimte: een ring krijgt minstens zoveel keer de omtrek die de personen samen innemen. */
-const BREATHING = 1.5;
+const BREATHING = 2.1;
 /** Zo ver mag een ring meegroeien voor ademruimte; daarna komen er sub-ringen bij. */
-const MAX_GROW = 1.9;
+const MAX_GROW = 2.4;
 const LABEL_PAD = 24; // ruimte voor de naam onder de foto
 
 /** Hoeveel boog (in eenheden) een persoon nodig heeft: foto of naam, wat het breedst is. */

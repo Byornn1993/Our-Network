@@ -32,7 +32,8 @@ interface View {
   k: number;
 }
 
-const LINE: Record<Ring, { w: number; o: number }> = { 1: { w: 2.6, o: 0.9 }, 2: { w: 2, o: 0.72 }, 3: { w: 1.3, o: 0.5 }, 4: { w: 0.9, o: 0.32 } };
+// Rustige lijnen vanuit het middelpunt: dun en zacht, sterker bij aanwijzen.
+const LINE: Record<Ring, { w: number; o: number }> = { 1: { w: 1.6, o: 0.55 }, 2: { w: 1.3, o: 0.4 }, 3: { w: 1, o: 0.3 }, 4: { w: 0.8, o: 0.22 } };
 const CONTROLS_W = 48;
 /** Onderaan ligt de legende over de kaart: daar zetten we niemand. */
 const LEGEND_H = 64;
@@ -352,7 +353,6 @@ export function NetworkMap({
             const style = LINE[p.ring];
             return (
               <g key={`l-${p.id}`}>
-                {p.ring <= 2 && <line x1={o.x} y1={o.y} x2={q.x} y2={q.y} stroke={p.color} strokeOpacity={0.14} strokeWidth={style.w * 4} strokeLinecap="round" />}
                 <line x1={o.x} y1={o.y} x2={q.x} y2={q.y} stroke={p.color} strokeOpacity={hover === p.id ? 1 : style.o} strokeWidth={style.w} strokeLinecap="round" />
               </g>
             );
