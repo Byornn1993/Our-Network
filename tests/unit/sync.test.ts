@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { openDb, type OurNetworkDb } from '@/lib/db/schema';
 import { buildStore, type Store } from '@/lib/db/store';
 import { SYNC_TABLES, type SyncTable } from '@/lib/db/types';
@@ -6,6 +6,19 @@ import { change, write } from '@/lib/db/repo';
 import { RemoteError, resolveConflict, syncOnce, type RemoteApi } from '@/lib/sync/engine';
 import { archivePerson, deletePerson, firstMeetingOf, saveEvent, savePerson, type PersonInput } from '@/lib/actions';
 import { buildBackup, importBackup } from '@/lib/backup';
+
+// Nep-opslag voor foto's bij het importeren van een back-up mét foto's.
+const uploads = vi.hoisted(() => [] as { path: string; size: number }[]);
+vi.mock('@/lib/backend', async (orig) => ({
+  ...(await orig<typeof import('@/lib/backend')>()),
+  getBackend: () => ({
+    storage: {
+      upload: async (path: string, blob: Blob) => (uploads.push({ path, size: blob.size }), path),
+      signedUrls: async () => ({}),
+      remove: async () => {},
+    },
+  }),
+}));
 
 // Twee "toestellen" (Bjorn en Stephanie) met elk een eigen lokale database, één gedeelde nep-server.
 
@@ -225,5 +238,33 @@ describe('sync tussen twee toestellen', () => {
     const again = await importBackup(await storeOf(b), json);
     expect(again.added + again.updated).toBe(0);
     await expect(importBackup(await storeOf(b), '{"foo":1}')).rejects.toThrow(/geen geldige/);
+  });
+
+  it("overzetten vanuit de artifact: foto's opnieuw opgeslagen, artifact-koppeling weg, back-up gaat voor", async () => {
+    const server = fakeServer();
+    const a = device();
+    await syncOnce(a, server.api);
+    const pid = await savePerson(await storeOf(a), input('Mam', VRIEND, { avatar_path: 'f55a22e8762b18744820b78a305bb831' }), { connections: [] });
+    const backup = buildBackup(await storeOf(a));
+    const profile = (backup.tables.profiles as Record<string, unknown>[]).find((p) => p.id === P1)!;
+    Object.assign(profile, { user_id: 'u_evh_LdvhQreFD0qLaxyMHQ', name: 'Bjorn W', updated_at: '2026-10-27T11:12:36.445Z' });
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const json = JSON.stringify({ ...backup, version: 2, files: { f55a22e8762b18744820b78a305bb831: png } });
+
+    // Nieuw toestel met de standaardinhoud van de server (nieuwer dan de back-up): zonder "gaat voor" overgeslagen.
+    const b = device();
+    await syncOnce(b, server.api);
+    await importBackup(await storeOf(b), json);
+    expect((await storeOf(b)).profileById.get(P1)?.name).toBe('Bjorn');
+
+    const c = device();
+    await syncOnce(c, server.api);
+    uploads.length = 0;
+    const r = await importBackup(await storeOf(c), json, { overwrite: true });
+    const sc = await storeOf(c);
+    expect(sc.profileById.get(P1)).toMatchObject({ name: 'Bjorn W', user_id: null });
+    expect(r.photos).toBe(1);
+    expect(uploads[0]!.path).toMatch(new RegExp(`^avatars/persons/${pid}/[0-9a-f-]{36}\\.jpg$`));
+    expect(sc.personById.get(pid)?.avatar_path).toBe(uploads[0]!.path);
   });
 });

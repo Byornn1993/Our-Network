@@ -15,7 +15,7 @@ Onderdeel van het persoonlijke app-ecosysteem naast Bjorn Finance en Be Strong, 
 |---|---|
 | Frontend | Vite 5, React 18, TypeScript (strict), Tailwind 3 met CSS-tokens, react-router 6 |
 | Data | Dexie (IndexedDB) local-first + outbox-synchronisatie |
-| Backend | Eigen Supabase-project: Postgres + RLS, Auth (e-mail/wachtwoord), Storage (privé-bucket) |
+| Backend | Supabase-project van Be Strong, als gast-app met prefix `net_` (Postgres + RLS, Auth, privé-bucket `net-photos`). Zie [SUPABASE_SHARED.md](SUPABASE_SHARED.md) |
 | PWA | vite-plugin-pwa (Workbox), enkel de app-shell wordt gecachet |
 | Tests | Vitest (unit + sync), RLS-tests op echte Postgres (PGlite), Playwright (e2e, offline) |
 | Hosting | GitHub Pages via GitHub Actions |
@@ -49,9 +49,11 @@ tests/           unit · rls · e2e
 - Geen DELETE-rechten op datatabellen: verwijderen = `deleted_at`. Archiveren = `archived_at`. Gebeurtenissen blijven altijd bestaan.
 - Privé-herinneringen (`is_private`) zijn via RLS enkel zichtbaar voor de maker.
 
-## Als claude.ai-Artifact (huidige productie)
+## Productie
 
-Omdat het gratis Supabase-plan maar 2 projecten toelaat, draait Our Network als Artifact:
+**App (PWA):** https://byornn1993.github.io/Our-Network/ met de gegevens in het Supabase-project van Be Strong. Alles van Our Network heet `net_…`; Be Strong en Boodschappenlijst blijven ongemoeid (getest in `tests/rls/shared-project.test.ts`). Inloggen met het Be Strong-account. Installatie en overzetten: [STAPPENPLAN.md](STAPPENPLAN.md).
+
+**Artifact (reserve):** de eerste versie draaide als claude.ai-Artifact:
 https://claude.ai/artifact/A5euRhFGiwRrz2RfmLkVzq — zie [docs/PLAN-ARTIFACT.md](docs/PLAN-ARTIFACT.md).
 
 ```bash

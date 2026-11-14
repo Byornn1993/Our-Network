@@ -1,18 +1,24 @@
 -- OUR NETWORK — volledige database-installatie (GEGENEREERD door scripts/gen-setup-sql.mjs).
 -- Gebruik: Supabase › SQL Editor › New query › alles plakken › Run. Eén keer uitvoeren op een leeg project.
 
--- ════════ 20261027000100_schema.sql ════════
+-- ════════ 001_schema.sql ════════
+-- Our Network is een GAST-APP in het gedeelde Supabase-project van Be Strong (zie SUPABASE_SHARED.md).
+-- Alles heeft het prefix net_ (tabellen, functies, policies, indexen) of net- (storage-bucket).
+-- Dit bestand raakt niets van Be Strong of Boodschappenlijst aan en werkt nooit op een heel schema.
+
+begin;
+
 -- Our Network — basisschema (netwerk én Our Story vanaf dag één)
 -- Principes:
 --  * UUID-primary keys worden door de client gegenereerd (offline werken + idempotente sync).
---  * Eén gedeelde netwerkruimte voor Bjorn en Stephanie: toegang via public.members (zie RLS-migratie).
+--  * Eén gedeelde netwerkruimte voor Bjorn en Stephanie: toegang via public.net_members (zie RLS-migratie).
 --  * Alle datatabellen hebben soft delete (deleted_at): verwijderingen synchroniseren mee en niets
 --    verdwijnt definitief vanuit de app.
 --  * updated_at wordt altijd door de server gezet (trigger); de client gebruikt het als sync-cursor.
 --  * Datum van gebeuren (event_date, first_met_at, effective_date) staat los van created_at (ingevoerd in de app).
 
 -- ───────────────────────── helpers ─────────────────────────
-create or replace function public.set_row_meta()
+create or replace function public.net_set_row_meta()
 returns trigger
 language plpgsql
 set search_path = ''
@@ -31,21 +37,21 @@ end;
 $$;
 
 -- ───────────────────────── toegang ─────────────────────────
-create table public.members (
+create table public.net_members (
   user_id uuid primary key references auth.users (id) on delete cascade,
   email text not null,
   created_at timestamptz not null default now()
 );
 
 -- E-mailadressen die lid mogen worden zodra ze inloggen.
-create table public.allowed_emails (
+create table public.net_allowed_emails (
   email text primary key check (email = lower(email) and email like '%@%' and char_length(email) <= 254),
   created_at timestamptz not null default now(),
   created_by uuid references auth.users (id) on delete set null default auth.uid()
 );
 
 -- ───────────────────────── profiles (Bjorn & Stephanie) ─────────────────────────
-create table public.profiles (
+create table public.net_profiles (
   id uuid primary key,
   slot smallint not null unique check (slot in (1, 2)),
   name text not null check (char_length(name) between 1 and 60),
@@ -58,7 +64,7 @@ create table public.profiles (
 );
 
 -- ───────────────────────── categories ─────────────────────────
-create table public.categories (
+create table public.net_categories (
   id uuid primary key,
   name text not null check (char_length(name) between 1 and 60),
   description text check (char_length(description) <= 500),
@@ -74,10 +80,10 @@ create table public.categories (
   deleted_at timestamptz,
   created_by uuid references auth.users (id) on delete set null
 );
-create unique index categories_name_uq on public.categories (lower(name)) where deleted_at is null;
+create unique index net_categories_name_uq on public.net_categories (lower(name)) where deleted_at is null;
 
 -- ───────────────────────── persons ─────────────────────────
-create table public.persons (
+create table public.net_persons (
   id uuid primary key,
   first_name text not null check (char_length(btrim(first_name)) between 1 and 80),
   last_name text check (char_length(last_name) <= 80),
@@ -95,7 +101,7 @@ create table public.persons (
   first_met_at date,
   first_met_precision text not null default 'day' check (first_met_precision in ('day', 'month', 'year')),
   added_at date not null default current_date,
-  category_id uuid not null references public.categories (id) on delete restrict,
+  category_id uuid not null references public.net_categories (id) on delete restrict,
   ring_override smallint check (ring_override between 1 and 4),
   archived_at timestamptz,
   created_at timestamptz not null default now(),
@@ -103,14 +109,14 @@ create table public.persons (
   deleted_at timestamptz,
   created_by uuid references auth.users (id) on delete set null
 );
-create index persons_category_idx on public.persons (category_id);
-create index persons_updated_idx on public.persons (updated_at);
+create index net_persons_category_idx on public.net_persons (category_id);
+create index net_persons_updated_idx on public.net_persons (updated_at);
 
 -- Persoon ↔ Bjorn/Stephanie
-create table public.person_connections (
+create table public.net_person_connections (
   id uuid primary key,
-  person_id uuid not null references public.persons (id) on delete cascade,
-  profile_id uuid not null references public.profiles (id) on delete cascade,
+  person_id uuid not null references public.net_persons (id) on delete cascade,
+  profile_id uuid not null references public.net_profiles (id) on delete cascade,
   description text check (char_length(description) <= 120),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -118,14 +124,14 @@ create table public.person_connections (
   created_by uuid references auth.users (id) on delete set null,
   unique (person_id, profile_id)
 );
-create index person_connections_profile_idx on public.person_connections (profile_id);
-create index person_connections_updated_idx on public.person_connections (updated_at);
+create index net_person_connections_profile_idx on public.net_person_connections (profile_id);
+create index net_person_connections_updated_idx on public.net_person_connections (updated_at);
 
 -- Persoon ↔ persoon (symmetrisch: één rij per paar en type)
-create table public.relationships (
+create table public.net_relationships (
   id uuid primary key,
-  person_id uuid not null references public.persons (id) on delete cascade,
-  related_person_id uuid not null references public.persons (id) on delete cascade,
+  person_id uuid not null references public.net_persons (id) on delete cascade,
+  related_person_id uuid not null references public.net_persons (id) on delete cascade,
   relationship_type text not null check (relationship_type in ('partner', 'family', 'friend', 'colleague', 'other')),
   description text check (char_length(description) <= 200),
   since_date date,
@@ -135,16 +141,16 @@ create table public.relationships (
   created_by uuid references auth.users (id) on delete set null,
   check (person_id <> related_person_id)
 );
-create unique index relationships_pair_uq on public.relationships (
+create unique index net_relationships_pair_uq on public.net_relationships (
   least(person_id, related_person_id), greatest(person_id, related_person_id), relationship_type
 );
-create index relationships_related_idx on public.relationships (related_person_id);
-create index relationships_updated_idx on public.relationships (updated_at);
+create index net_relationships_related_idx on public.net_relationships (related_person_id);
+create index net_relationships_updated_idx on public.net_relationships (updated_at);
 
 -- Handmatige posities op de netwerkkaart (relatief t.o.v. het middelpunt)
-create table public.network_positions (
+create table public.net_network_positions (
   id uuid primary key,
-  person_id uuid not null unique references public.persons (id) on delete cascade,
+  person_id uuid not null unique references public.net_persons (id) on delete cascade,
   x_position double precision not null check (x_position between -100000 and 100000),
   y_position double precision not null check (y_position between -100000 and 100000),
   created_at timestamptz not null default now(),
@@ -152,12 +158,12 @@ create table public.network_positions (
   deleted_at timestamptz,
   created_by uuid references auth.users (id) on delete set null
 );
-create index network_positions_updated_idx on public.network_positions (updated_at);
+create index net_network_positions_updated_idx on public.net_network_positions (updated_at);
 
 -- Contactmomenten (voorbereid voor latere uitbreiding)
-create table public.contact_history (
+create table public.net_contact_history (
   id uuid primary key,
-  person_id uuid not null references public.persons (id) on delete cascade,
+  person_id uuid not null references public.net_persons (id) on delete cascade,
   contact_date date not null,
   kind text not null default 'other' check (kind in ('meeting', 'call', 'message', 'visit', 'other')),
   description text check (char_length(description) <= 2000),
@@ -166,11 +172,11 @@ create table public.contact_history (
   deleted_at timestamptz,
   created_by uuid references auth.users (id) on delete set null
 );
-create index contact_history_person_idx on public.contact_history (person_id, contact_date);
-create index contact_history_updated_idx on public.contact_history (updated_at);
+create index net_contact_history_person_idx on public.net_contact_history (person_id, contact_date);
+create index net_contact_history_updated_idx on public.net_contact_history (updated_at);
 
 -- ───────────────────────── Our Story ─────────────────────────
-create table public.event_categories (
+create table public.net_event_categories (
   id uuid primary key,
   -- Vaste sleutel voor de standaardtypes (filters zoals "Eerste ontmoetingen"); null voor eigen types.
   system_key text unique check (system_key in ('first_meeting', 'new_relationship', 'family', 'friendship', 'social_change', 'memory', 'birthday')),
@@ -184,9 +190,9 @@ create table public.event_categories (
   deleted_at timestamptz,
   created_by uuid references auth.users (id) on delete set null
 );
-create unique index event_categories_name_uq on public.event_categories (lower(name)) where deleted_at is null;
+create unique index net_event_categories_name_uq on public.net_event_categories (lower(name)) where deleted_at is null;
 
-create table public.events (
+create table public.net_events (
   id uuid primary key,
   title text not null check (char_length(btrim(title)) between 1 and 160),
   description text check (char_length(description) <= 5000),
@@ -194,7 +200,7 @@ create table public.events (
   event_date date not null,
   date_precision text not null default 'day' check (date_precision in ('day', 'month', 'year')),
   event_end_date date,
-  event_category_id uuid not null references public.event_categories (id) on delete restrict,
+  event_category_id uuid not null references public.net_event_categories (id) on delete restrict,
   theme text check (char_length(theme) <= 80),
   location text check (char_length(location) <= 200),
   is_highlight boolean not null default false,
@@ -205,39 +211,39 @@ create table public.events (
   created_by uuid references auth.users (id) on delete set null,
   check (event_end_date is null or event_end_date >= event_date)
 );
-create index events_date_idx on public.events (event_date desc);
-create index events_category_idx on public.events (event_category_id);
-create index events_updated_idx on public.events (updated_at);
+create index net_events_date_idx on public.net_events (event_date desc);
+create index net_events_category_idx on public.net_events (event_category_id);
+create index net_events_updated_idx on public.net_events (updated_at);
 
-create table public.event_persons (
+create table public.net_event_persons (
   id uuid primary key,
-  event_id uuid not null references public.events (id) on delete cascade,
-  person_id uuid not null references public.persons (id) on delete cascade,
+  event_id uuid not null references public.net_events (id) on delete cascade,
+  person_id uuid not null references public.net_persons (id) on delete cascade,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
   created_by uuid references auth.users (id) on delete set null,
   unique (event_id, person_id)
 );
-create index event_persons_person_idx on public.event_persons (person_id);
-create index event_persons_updated_idx on public.event_persons (updated_at);
+create index net_event_persons_person_idx on public.net_event_persons (person_id);
+create index net_event_persons_updated_idx on public.net_event_persons (updated_at);
 
-create table public.event_profiles (
+create table public.net_event_profiles (
   id uuid primary key,
-  event_id uuid not null references public.events (id) on delete cascade,
-  profile_id uuid not null references public.profiles (id) on delete cascade,
+  event_id uuid not null references public.net_events (id) on delete cascade,
+  profile_id uuid not null references public.net_profiles (id) on delete cascade,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
   created_by uuid references auth.users (id) on delete set null,
   unique (event_id, profile_id)
 );
-create index event_profiles_profile_idx on public.event_profiles (profile_id);
-create index event_profiles_updated_idx on public.event_profiles (updated_at);
+create index net_event_profiles_profile_idx on public.net_event_profiles (profile_id);
+create index net_event_profiles_updated_idx on public.net_event_profiles (updated_at);
 
-create table public.event_photos (
+create table public.net_event_photos (
   id uuid primary key,
-  event_id uuid not null references public.events (id) on delete cascade,
+  event_id uuid not null references public.net_events (id) on delete cascade,
   storage_path text not null unique check (storage_path like 'events/%' and char_length(storage_path) <= 300),
   thumb_path text check (thumb_path like 'events/%' and char_length(thumb_path) <= 300),
   caption text check (char_length(caption) <= 500),
@@ -249,30 +255,30 @@ create table public.event_photos (
   deleted_at timestamptz,
   created_by uuid references auth.users (id) on delete set null
 );
-create index event_photos_event_idx on public.event_photos (event_id, display_order);
-create index event_photos_updated_idx on public.event_photos (updated_at);
+create index net_event_photos_event_idx on public.net_event_photos (event_id, display_order);
+create index net_event_photos_updated_idx on public.net_event_photos (updated_at);
 
-create table public.photo_persons (
+create table public.net_photo_persons (
   id uuid primary key,
-  photo_id uuid not null references public.event_photos (id) on delete cascade,
-  person_id uuid not null references public.persons (id) on delete cascade,
+  photo_id uuid not null references public.net_event_photos (id) on delete cascade,
+  person_id uuid not null references public.net_persons (id) on delete cascade,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
   created_by uuid references auth.users (id) on delete set null,
   unique (photo_id, person_id)
 );
-create index photo_persons_person_idx on public.photo_persons (person_id);
-create index photo_persons_updated_idx on public.photo_persons (updated_at);
+create index net_photo_persons_person_idx on public.net_photo_persons (person_id);
+create index net_photo_persons_updated_idx on public.net_photo_persons (updated_at);
 
 -- Relatie- en statusgeschiedenis: één rij per wijziging, met de datum waarop ze inging.
 -- De huidige categorie staat op persons.category_id; deze tabel bewaart het verloop.
-create table public.relationship_history (
+create table public.net_relationship_history (
   id uuid primary key,
-  person_id uuid not null references public.persons (id) on delete cascade,
+  person_id uuid not null references public.net_persons (id) on delete cascade,
   change_type text not null check (change_type in ('category', 'status')),
-  category_id uuid references public.categories (id) on delete restrict,
-  previous_category_id uuid references public.categories (id) on delete restrict,
+  category_id uuid references public.net_categories (id) on delete restrict,
+  previous_category_id uuid references public.net_categories (id) on delete restrict,
   status text check (status in ('active', 'archived')),
   effective_date date not null,
   date_precision text not null default 'day' check (date_precision in ('day', 'month', 'year')),
@@ -286,51 +292,59 @@ create table public.relationship_history (
     or (change_type = 'status' and status is not null and category_id is null)
   )
 );
-create index relationship_history_person_idx on public.relationship_history (person_id, effective_date);
-create index relationship_history_updated_idx on public.relationship_history (updated_at);
+create index net_relationship_history_person_idx on public.net_relationship_history (person_id, effective_date);
+create index net_relationship_history_updated_idx on public.net_relationship_history (updated_at);
 
 -- ───────────────────────── triggers ─────────────────────────
 do $$
 declare t text;
 begin
   foreach t in array array[
-    'profiles', 'categories', 'persons', 'person_connections', 'relationships', 'network_positions',
-    'contact_history', 'event_categories', 'events', 'event_persons', 'event_profiles', 'event_photos',
-    'photo_persons', 'relationship_history'
+    'net_profiles', 'net_categories', 'net_persons', 'net_person_connections', 'net_relationships', 'net_network_positions',
+    'net_contact_history', 'net_event_categories', 'net_events', 'net_event_persons', 'net_event_profiles', 'net_event_photos',
+    'net_photo_persons', 'net_relationship_history'
   ] loop
-    execute format('create trigger set_row_meta before insert or update on public.%I for each row execute function public.set_row_meta()', t);
+    execute format('create trigger net_set_row_meta before insert or update on public.%I for each row execute function public.net_set_row_meta()', t);
   end loop;
 end;
 $$;
 
-create index profiles_updated_idx on public.profiles (updated_at);
-create index categories_updated_idx on public.categories (updated_at);
-create index event_categories_updated_idx on public.event_categories (updated_at);
+create index net_profiles_updated_idx on public.net_profiles (updated_at);
+create index net_categories_updated_idx on public.net_categories (updated_at);
+create index net_event_categories_updated_idx on public.net_event_categories (updated_at);
+
+commit;
 
 
--- ════════ 20261027000200_rls.sql ════════
+-- ════════ 002_rls.sql ════════
+-- Our Network is een GAST-APP in het gedeelde Supabase-project van Be Strong (zie SUPABASE_SHARED.md).
+-- Alles heeft het prefix net_ (tabellen, functies, policies, indexen) of net- (storage-bucket).
+-- Dit bestand raakt niets van Be Strong of Boodschappenlijst aan en werkt nooit op een heel schema.
+
+begin;
+
 -- Row Level Security voor de gedeelde netwerkruimte.
---  * Alleen leden (public.members) zien of wijzigen iets. anon heeft nergens toegang.
+--  * Alleen leden (public.net_members) zien of wijzigen iets. anon heeft nergens toegang.
 --  * Geen DELETE-policies op datatabellen: verwijderen gebeurt via deleted_at (soft delete),
 --    zodat herinneringen nooit definitief verdwijnen vanuit de app.
 --  * Privé-herinneringen (events.is_private) zijn enkel zichtbaar voor wie ze aanmaakte,
 --    net als hun koppelingen en foto's.
 
 -- ───────────────────────── lidmaatschap ─────────────────────────
-create or replace function public.is_member()
+create or replace function public.net_is_member()
 returns boolean
 language sql
 stable
 security definer
 set search_path = ''
 as $$
-  select exists (select 1 from public.members m where m.user_id = (select auth.uid()));
+  select exists (select 1 from public.net_members m where m.user_id = (select auth.uid()));
 $$;
 
 -- Wordt na elke login aangeroepen. Maakt de ingelogde gebruiker lid als:
 --  * er nog geen enkel lid is (eerste installatie), of
 --  * zijn/haar e-mailadres in allowed_emails staat.
-create or replace function public.claim_membership()
+create or replace function public.net_claim_membership()
 returns boolean
 language plpgsql
 volatile
@@ -344,15 +358,15 @@ begin
   if uid is null then
     return false;
   end if;
-  if exists (select 1 from public.members where user_id = uid) then
+  if exists (select 1 from public.net_members where user_id = uid) then
     return true;
   end if;
   select lower(u.email) into mail from auth.users u where u.id = uid;
   -- Voorkomt dat twee gelijktijdige eerste logins allebei "eerste lid" worden.
-  lock table public.members in share row exclusive mode;
-  if not exists (select 1 from public.members)
-     or exists (select 1 from public.allowed_emails a where a.email = mail) then
-    insert into public.members (user_id, email) values (uid, coalesce(mail, '')) on conflict do nothing;
+  lock table public.net_members in share row exclusive mode;
+  if not exists (select 1 from public.net_members)
+     or exists (select 1 from public.net_allowed_emails a where a.email = mail) then
+    insert into public.net_members (user_id, email) values (uid, coalesce(mail, '')) on conflict do nothing;
     return true;
   end if;
   return false;
@@ -360,133 +374,166 @@ end;
 $$;
 
 -- Is een gebeurtenis zichtbaar voor de huidige gebruiker? (RLS van events geldt hier, security invoker)
-create or replace function public.event_visible(ev_id uuid)
+create or replace function public.net_event_visible(ev_id uuid)
 returns boolean
 language sql
 stable
 security invoker
 set search_path = ''
 as $$
-  select exists (select 1 from public.events e where e.id = ev_id);
+  select exists (select 1 from public.net_events e where e.id = ev_id);
 $$;
 
-create or replace function public.photo_visible(ph_id uuid)
+create or replace function public.net_photo_visible(ph_id uuid)
 returns boolean
 language sql
 stable
 security invoker
 set search_path = ''
 as $$
-  select exists (select 1 from public.event_photos p where p.id = ph_id);
+  select exists (select 1 from public.net_event_photos p where p.id = ph_id);
 $$;
 
-revoke all on function public.is_member() from public, anon;
-revoke all on function public.claim_membership() from public, anon;
-grant execute on function public.is_member() to authenticated;
-grant execute on function public.claim_membership() to authenticated;
-grant execute on function public.event_visible(uuid) to authenticated;
-grant execute on function public.photo_visible(uuid) to authenticated;
+-- Functies: enkel ingelogde gebruikers; anon en public niets. Alleen eigen net_-functies.
+revoke all on function public.net_set_row_meta() from public, anon, authenticated;
+revoke all on function public.net_is_member() from public, anon;
+revoke all on function public.net_claim_membership() from public, anon;
+revoke all on function public.net_event_visible(uuid) from public, anon;
+revoke all on function public.net_photo_visible(uuid) from public, anon;
+grant execute on function public.net_is_member() to authenticated;
+grant execute on function public.net_claim_membership() to authenticated;
+grant execute on function public.net_event_visible(uuid) to authenticated;
+grant execute on function public.net_photo_visible(uuid) to authenticated;
 
 -- ───────────────────────── rechten ─────────────────────────
-revoke all on all tables in schema public from anon;
+-- Gedeeld Supabase-project (Be Strong, Boodschappenlijst): rechten ENKEL per eigen net_-tabel.
+-- Nooit een opdracht op een heel schema ("on all tables in schema public").
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'net_members', 'net_allowed_emails', 'net_profiles', 'net_categories', 'net_persons', 'net_person_connections',
+    'net_relationships', 'net_network_positions', 'net_contact_history', 'net_event_categories', 'net_events',
+    'net_event_persons', 'net_event_profiles', 'net_event_photos', 'net_photo_persons', 'net_relationship_history'
+  ] loop
+    execute format('revoke all on public.%I from anon, authenticated, public', t);
+  end loop;
+end;
+$$;
 
-alter table public.members enable row level security;
-alter table public.allowed_emails enable row level security;
+alter table public.net_members enable row level security;
+alter table public.net_allowed_emails enable row level security;
 
-grant select on public.members to authenticated;
-grant select, insert, delete on public.allowed_emails to authenticated;
+grant select on public.net_members to authenticated;
+grant select, insert, delete on public.net_allowed_emails to authenticated;
 
-create policy members_select on public.members for select to authenticated using (public.is_member());
-create policy allowed_emails_select on public.allowed_emails for select to authenticated using (public.is_member());
-create policy allowed_emails_insert on public.allowed_emails for insert to authenticated with check (public.is_member());
-create policy allowed_emails_delete on public.allowed_emails for delete to authenticated using (public.is_member());
+create policy net_members_select on public.net_members for select to authenticated using (public.net_is_member());
+create policy net_allowed_emails_select on public.net_allowed_emails for select to authenticated using (public.net_is_member());
+create policy net_allowed_emails_insert on public.net_allowed_emails for insert to authenticated with check (public.net_is_member());
+create policy net_allowed_emails_delete on public.net_allowed_emails for delete to authenticated using (public.net_is_member());
 
 -- Gewone gedeelde datatabellen: lezen, toevoegen en wijzigen voor leden.
 do $$
 declare t text;
 begin
   foreach t in array array[
-    'profiles', 'categories', 'persons', 'person_connections', 'relationships', 'network_positions',
-    'contact_history', 'event_categories', 'relationship_history'
+    'net_profiles', 'net_categories', 'net_persons', 'net_person_connections', 'net_relationships', 'net_network_positions',
+    'net_contact_history', 'net_event_categories', 'net_relationship_history'
   ] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on public.%I from authenticated', t);
     execute format('grant select, insert, update on public.%I to authenticated', t);
-    execute format('create policy %I on public.%I for select to authenticated using (public.is_member())', t || '_select', t);
-    execute format('create policy %I on public.%I for insert to authenticated with check (public.is_member())', t || '_insert', t);
-    execute format('create policy %I on public.%I for update to authenticated using (public.is_member()) with check (public.is_member())', t || '_update', t);
+    execute format('create policy %I on public.%I for select to authenticated using (public.net_is_member())', t || '_select', t);
+    execute format('create policy %I on public.%I for insert to authenticated with check (public.net_is_member())', t || '_insert', t);
+    execute format('create policy %I on public.%I for update to authenticated using (public.net_is_member()) with check (public.net_is_member())', t || '_update', t);
   end loop;
 end;
 $$;
 
 -- ── events: privé enkel voor de maker
-alter table public.events enable row level security;
-revoke all on public.events from authenticated;
-grant select, insert, update on public.events to authenticated;
-create policy events_select on public.events for select to authenticated
-  using (public.is_member() and (not is_private or created_by = (select auth.uid())));
-create policy events_insert on public.events for insert to authenticated
-  with check (public.is_member() and (not is_private or created_by = (select auth.uid())));
-create policy events_update on public.events for update to authenticated
-  using (public.is_member() and (not is_private or created_by = (select auth.uid())))
-  with check (public.is_member() and (not is_private or created_by = (select auth.uid())));
+alter table public.net_events enable row level security;
+revoke all on public.net_events from authenticated;
+grant select, insert, update on public.net_events to authenticated;
+create policy net_events_select on public.net_events for select to authenticated
+  using (public.net_is_member() and (not is_private or created_by = (select auth.uid())));
+create policy net_events_insert on public.net_events for insert to authenticated
+  with check (public.net_is_member() and (not is_private or created_by = (select auth.uid())));
+create policy net_events_update on public.net_events for update to authenticated
+  using (public.net_is_member() and (not is_private or created_by = (select auth.uid())))
+  with check (public.net_is_member() and (not is_private or created_by = (select auth.uid())));
 
 -- ── tabellen die aan een gebeurtenis hangen: volgen de zichtbaarheid van die gebeurtenis
 do $$
 declare t text;
 begin
-  foreach t in array array['event_persons', 'event_profiles', 'event_photos'] loop
+  foreach t in array array['net_event_persons', 'net_event_profiles', 'net_event_photos'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on public.%I from authenticated', t);
     execute format('grant select, insert, update on public.%I to authenticated', t);
-    execute format('create policy %I on public.%I for select to authenticated using (public.is_member() and public.event_visible(event_id))', t || '_select', t);
-    execute format('create policy %I on public.%I for insert to authenticated with check (public.is_member() and public.event_visible(event_id))', t || '_insert', t);
-    execute format('create policy %I on public.%I for update to authenticated using (public.is_member() and public.event_visible(event_id)) with check (public.is_member() and public.event_visible(event_id))', t || '_update', t);
+    execute format('create policy %I on public.%I for select to authenticated using (public.net_is_member() and public.net_event_visible(event_id))', t || '_select', t);
+    execute format('create policy %I on public.%I for insert to authenticated with check (public.net_is_member() and public.net_event_visible(event_id))', t || '_insert', t);
+    execute format('create policy %I on public.%I for update to authenticated using (public.net_is_member() and public.net_event_visible(event_id)) with check (public.net_is_member() and public.net_event_visible(event_id))', t || '_update', t);
   end loop;
 end;
 $$;
 
-alter table public.photo_persons enable row level security;
-revoke all on public.photo_persons from authenticated;
-grant select, insert, update on public.photo_persons to authenticated;
-create policy photo_persons_select on public.photo_persons for select to authenticated
-  using (public.is_member() and public.photo_visible(photo_id));
-create policy photo_persons_insert on public.photo_persons for insert to authenticated
-  with check (public.is_member() and public.photo_visible(photo_id));
-create policy photo_persons_update on public.photo_persons for update to authenticated
-  using (public.is_member() and public.photo_visible(photo_id))
-  with check (public.is_member() and public.photo_visible(photo_id));
+alter table public.net_photo_persons enable row level security;
+revoke all on public.net_photo_persons from authenticated;
+grant select, insert, update on public.net_photo_persons to authenticated;
+create policy net_photo_persons_select on public.net_photo_persons for select to authenticated
+  using (public.net_is_member() and public.net_photo_visible(photo_id));
+create policy net_photo_persons_insert on public.net_photo_persons for insert to authenticated
+  with check (public.net_is_member() and public.net_photo_visible(photo_id));
+create policy net_photo_persons_update on public.net_photo_persons for update to authenticated
+  using (public.net_is_member() and public.net_photo_visible(photo_id))
+  with check (public.net_is_member() and public.net_photo_visible(photo_id));
+
+commit;
 
 
--- ════════ 20261027000300_defaults.sql ════════
+-- ════════ 003_defaults.sql ════════
+-- Our Network is een GAST-APP in het gedeelde Supabase-project van Be Strong (zie SUPABASE_SHARED.md).
+-- Alles heeft het prefix net_ (tabellen, functies, policies, indexen) of net- (storage-bucket).
+-- Dit bestand raakt niets van Be Strong of Boodschappenlijst aan en werkt nooit op een heel schema.
+
+begin;
+
 -- Standaardinhoud: de twee centrale profielen, de vijf netwerkcategorieën en de gebeurtenistypes.
 -- Vaste UUID's, zodat elke installatie dezelfde sleutels heeft. Alles is daarna in de app aanpasbaar.
 
-insert into public.profiles (id, slot, name) values
+insert into public.net_profiles (id, slot, name) values
   ('00000000-0000-4000-8000-000000000001', 1, 'Bjorn'),
   ('00000000-0000-4000-8000-000000000002', 2, 'Stephanie')
 on conflict (id) do nothing;
 
-insert into public.categories (id, name, description, color, icon, ring, avatar_size, group_key, display_order) values
-  ('00000000-0000-4000-8000-000000000101', 'Familie', 'Ouders, broers, zussen en de rest van de familie.', '#E9B949', 'home', 1, 52, 'family', 1),
-  ('00000000-0000-4000-8000-000000000102', 'Beste vrienden', 'De mensen bij wie we altijd terechtkunnen.', '#F26B1D', 'heart', 2, 48, 'friends', 2),
-  ('00000000-0000-4000-8000-000000000103', 'Goede vrienden', 'Vrienden die we graag en geregeld zien.', '#F5A266', 'smile', 3, 44, 'friends', 3),
-  ('00000000-0000-4000-8000-000000000104', 'Collega''s', 'Mensen van het werk.', '#6BB8E8', 'briefcase', 3, 42, 'colleagues', 4),
-  ('00000000-0000-4000-8000-000000000105', 'Kennissen', 'Mensen die we kennen, maar minder vaak zien.', '#8A9590', 'user', 4, 38, 'acquaintances', 5)
+insert into public.net_categories (id, name, description, color, icon, ring, avatar_size, group_key, display_order) values
+  ('00000000-0000-4000-8000-000000000101', 'Familie', 'Ouders, broers, zussen en de rest van de familie.', '#B08D57', 'home', 1, 52, 'family', 1),
+  ('00000000-0000-4000-8000-000000000102', 'Beste vrienden', 'De mensen bij wie we altijd terechtkunnen.', '#D08A78', 'heart', 2, 48, 'friends', 2),
+  ('00000000-0000-4000-8000-000000000103', 'Goede vrienden', 'Vrienden die we graag en geregeld zien.', '#9DB59A', 'smile', 3, 44, 'friends', 3),
+  ('00000000-0000-4000-8000-000000000104', 'Collega''s', 'Mensen van het werk.', '#8FA9C2', 'briefcase', 3, 42, 'colleagues', 4),
+  ('00000000-0000-4000-8000-000000000105', 'Kennissen', 'Mensen die we kennen, maar minder vaak zien.', '#7C8FA3', 'user', 4, 38, 'acquaintances', 5)
 on conflict (id) do nothing;
 
-insert into public.event_categories (id, system_key, name, color, icon, display_order) values
-  ('00000000-0000-4000-8000-000000000201', 'first_meeting', 'Eerste ontmoeting', '#62E3B0', 'handshake', 1),
-  ('00000000-0000-4000-8000-000000000202', 'new_relationship', 'Nieuwe relatie', '#F26B1D', 'heart', 2),
-  ('00000000-0000-4000-8000-000000000203', 'family', 'Familiegebeurtenis', '#E9B949', 'home', 3),
-  ('00000000-0000-4000-8000-000000000204', 'friendship', 'Vriendschapsmoment', '#F5A266', 'party', 4),
-  ('00000000-0000-4000-8000-000000000205', 'social_change', 'Sociale verandering', '#6BB8E8', 'shuffle', 5),
-  ('00000000-0000-4000-8000-000000000206', 'memory', 'Belangrijke herinnering', '#C9A7F5', 'star', 6),
-  ('00000000-0000-4000-8000-000000000207', 'birthday', 'Verjaardag', '#F28CB1', 'cake', 7)
+insert into public.net_event_categories (id, system_key, name, color, icon, display_order) values
+  ('00000000-0000-4000-8000-000000000201', 'first_meeting', 'Eerste ontmoeting', '#9DB59A', 'handshake', 1),
+  ('00000000-0000-4000-8000-000000000202', 'new_relationship', 'Nieuwe relatie', '#D08A78', 'heart', 2),
+  ('00000000-0000-4000-8000-000000000203', 'family', 'Familiegebeurtenis', '#B08D57', 'home', 3),
+  ('00000000-0000-4000-8000-000000000204', 'friendship', 'Vriendschapsmoment', '#C9AE7E', 'party', 4),
+  ('00000000-0000-4000-8000-000000000205', 'social_change', 'Sociale verandering', '#7C8FA3', 'shuffle', 5),
+  ('00000000-0000-4000-8000-000000000206', 'memory', 'Belangrijke herinnering', '#8FA9C2', 'star', 6),
+  ('00000000-0000-4000-8000-000000000207', 'birthday', 'Verjaardag', '#B79AA8', 'cake', 7)
 on conflict (id) do nothing;
 
+commit;
 
--- ════════ 20261027000400_storage.sql ════════
+
+-- ════════ 004_storage.sql ════════
+-- Our Network is een GAST-APP in het gedeelde Supabase-project van Be Strong (zie SUPABASE_SHARED.md).
+-- Alles heeft het prefix net_ (tabellen, functies, policies, indexen) of net- (storage-bucket).
+-- Dit bestand raakt niets van Be Strong of Boodschappenlijst aan en werkt nooit op een heel schema.
+
+begin;
+
 -- Supabase Storage: één PRIVÉ bucket voor profielfoto's en herinneringen.
 --   avatars/profiles/<profile_id>/<uuid>.jpg
 --   avatars/persons/<person_id>/<uuid>.jpg
@@ -502,28 +549,30 @@ begin
   end if;
 
   insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-  values ('our-network', 'our-network', false, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
+  values ('net-photos', 'net-photos', false, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
   on conflict (id) do update set public = false, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 
   execute $p$
-    create policy our_network_select on storage.objects for select to authenticated
-      using (bucket_id = 'our-network' and public.is_member())
+    create policy net_photos_select on storage.objects for select to authenticated
+      using (bucket_id = 'net-photos' and public.net_is_member())
   $p$;
   execute $p$
-    create policy our_network_insert on storage.objects for insert to authenticated
+    create policy net_photos_insert on storage.objects for insert to authenticated
       with check (
-        bucket_id = 'our-network' and public.is_member()
+        bucket_id = 'net-photos' and public.net_is_member()
         and name ~ '^(avatars/(profiles|persons)/[0-9a-f-]{36}|events/[0-9a-f-]{36})/[0-9a-f-]{36}(_thumb)?\.(jpg|png|webp)$'
       )
   $p$;
   execute $p$
-    create policy our_network_update on storage.objects for update to authenticated
-      using (bucket_id = 'our-network' and public.is_member())
-      with check (bucket_id = 'our-network' and public.is_member())
+    create policy net_photos_update on storage.objects for update to authenticated
+      using (bucket_id = 'net-photos' and public.net_is_member())
+      with check (bucket_id = 'net-photos' and public.net_is_member())
   $p$;
   execute $p$
-    create policy our_network_delete on storage.objects for delete to authenticated
-      using (bucket_id = 'our-network' and public.is_member())
+    create policy net_photos_delete on storage.objects for delete to authenticated
+      using (bucket_id = 'net-photos' and public.net_is_member())
   $p$;
 end;
 $$;
+
+commit;

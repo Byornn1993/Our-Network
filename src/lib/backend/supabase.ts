@@ -3,7 +3,11 @@ import { RemoteError } from '@/lib/sync/engine';
 import type { AuthEvent, AuthUser, Backend } from './types';
 
 // Alleen de publieke URL en de publishable/anon key. Nooit een service-role/secret key in de frontend.
-const BUCKET = 'our-network';
+// Our Network is een gast-app in het Supabase-project van Be Strong (zie SUPABASE_SHARED.md):
+// alle tabellen en functies heten net_…, de foto's staan in de eigen bucket net-photos.
+const BUCKET = 'net-photos';
+const PREFIX = 'net_';
+const tbl = (name: string) => PREFIX + name;
 const SIGNED_URL_TTL = 60 * 60;
 
 function toError(e: PostgrestError | Error | null | unknown): RemoteError {
@@ -43,7 +47,7 @@ export function createSupabaseBackend(url: string, key: string): Backend {
         if (error) throw error;
       },
       async signOut() {
-        const { error } = await client.auth.signOut();
+        const { error } = await client.auth.signOut({ scope: 'local' }); // enkel deze app op dit toestel, niet Be Strong of Boodschappenlijst
         if (error) throw error;
       },
       async sendResetLink(email, redirectTo) {
@@ -56,38 +60,38 @@ export function createSupabaseBackend(url: string, key: string): Backend {
       },
     },
     async claimMembership() {
-      const { data, error } = await client.rpc('claim_membership');
+      const { data, error } = await client.rpc(tbl('claim_membership'));
       if (error) throw toError(error);
       return data === true;
     },
     members: {
       async list() {
-        const { data, error } = await client.from('members').select('user_id, email, created_at').order('created_at');
+        const { data, error } = await client.from(tbl('members')).select('user_id, email, created_at').order('created_at');
         if (error) throw toError(error);
         return data ?? [];
       },
       async invites() {
-        const { data, error } = await client.from('allowed_emails').select('email').order('created_at');
+        const { data, error } = await client.from(tbl('allowed_emails')).select('email').order('created_at');
         if (error) throw toError(error);
         return (data ?? []).map((r) => r.email as string);
       },
       async invite(email) {
-        const { error } = await client.from('allowed_emails').upsert({ email: email.trim().toLowerCase() }, { onConflict: 'email', ignoreDuplicates: true });
+        const { error } = await client.from(tbl('allowed_emails')).upsert({ email: email.trim().toLowerCase() }, { onConflict: 'email', ignoreDuplicates: true });
         if (error) throw toError(error);
       },
       async revokeInvite(email) {
-        const { error } = await client.from('allowed_emails').delete().eq('email', email);
+        const { error } = await client.from(tbl('allowed_emails')).delete().eq('email', email);
         if (error) throw toError(error);
       },
     },
     remote: {
       async upsert(table, row) {
-        const { data, error } = await client.from(table).upsert(row, { onConflict: 'id' }).select('updated_at').single();
+        const { data, error } = await client.from(tbl(table)).upsert(row, { onConflict: 'id' }).select('updated_at').single();
         if (error) throw toError(error);
         return (data as { updated_at: string }).updated_at;
       },
       async fetchSince(table, since, from, to) {
-        let q = client.from(table).select('*').order('updated_at', { ascending: true }).order('id').range(from, to);
+        let q = client.from(tbl(table)).select('*').order('updated_at', { ascending: true }).order('id').range(from, to);
         if (since) q = q.gt('updated_at', since);
         const { data, error } = await q;
         if (error) throw toError(error);

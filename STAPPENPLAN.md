@@ -1,70 +1,82 @@
-# Our Network online zetten — stappenplan
+# Our Network als app (PWA) — stappenplan
 
-Je hoeft niets te programmeren. Volg de stappen in volgorde. Reken op ongeveer 15 minuten.
+Our Network draait als app op GitHub Pages, net als Be Strong. De gegevens staan in het **Supabase-project van Be Strong**, als derde app naast Be Strong en Boodschappenlijst. Alles van Our Network heet `net_…`, dus Be Strong en Boodschappenlijst merken er niets van. Zie [SUPABASE_SHARED.md](SUPABASE_SHARED.md).
+
+Je hoeft niets te programmeren. Reken op ongeveer 20 minuten.
 
 **Belangrijk:** de *secret key* en het *databasewachtwoord* van Supabase deel je met niemand, ook niet met Claude.
 
 ---
 
-## Deel A — Supabase klaarzetten (jij)
+## Deel A — Database (jij, in Supabase)
 
-### Stap 1: Een nieuw project maken
+### Stap 1: Our Network installeren in het project van Be Strong
 
-1. Ga naar **supabase.com** en log in.
-2. Klik op **New project**. Naam: **our-network**. Regio: **Frankfurt (eu-central-1)** of **Ireland (eu-west-1)**.
-3. Kies een sterk databasewachtwoord en bewaar het in je wachtwoordbeheerder. Je hebt het verder niet nodig.
-4. Wacht tot het project klaar is (±2 minuten).
+1. Ga naar **supabase.com**, log in en open het project **Be Strong**.
+2. Klik links op **SQL Editor** (`>_`) › **+ New query**.
+3. Open op je laptop **Documenten › Our Network › supabase › setup-productie.sql** met Kladblok.
+4. **Ctrl + A**, **Ctrl + C**, terug naar Supabase, **Ctrl + V**.
+5. Klik **Run**. Onderaan moet **Success. No rows returned** verschijnen.
 
-> Lukt het niet omdat het gratis plan al 2 actieve projecten heeft (Bjorn Finance en Be Strong)? Zie onderaan: **Gratis limiet**.
+**Controle:**
+- **Table Editor** toont nieuwe tabellen die beginnen met `net_`, zoals `net_persons` en `net_events`. De tabellen van Be Strong (`workouts`, `profiles`, …) en Boodschappenlijst (`lists_…`) staan er nog, ongewijzigd.
+- **Storage** toont een nieuwe privé-bucket `net-photos`.
+- Open Be Strong en Boodschappenlijst even: alles werkt zoals voorheen.
 
-### Stap 2: De database installeren
+Noteer daarna de datum in `supabase/migrations/LOG.md`.
 
-1. Klik links op **SQL Editor** (`>_`) › **+ New query**.
-2. Open op je laptop **Documenten › Our Network › supabase › setup-productie.sql** met Kladblok.
-3. **Ctrl + A**, **Ctrl + C**, terug naar Supabase, **Ctrl + V**.
-4. Klik **Run**. Onderaan moet **Success. No rows returned** verschijnen.
+### Stap 2: Het webadres van de app toelaten (voor "wachtwoord vergeten")
 
-**Controle:** **Table Editor** toont onder andere `persons`, `events` en `relationship_history`. **Storage** toont de bucket `our-network` (privé).
+1. **Authentication** › **URL Configuration**.
+2. Onder **Redirect URLs** › **Add URL**: `https://byornn1993.github.io/Our-Network/**`
+3. **Save**. De **Site URL** laat je zoals hij is (die hoort bij Be Strong).
 
-### Stap 3: Registraties uitzetten
-
-1. **Authentication** › **Sign In / Providers**.
-2. **Allow new users to sign up**: **UIT**. **Confirm email**: **UIT**. **Save**.
-
-### Stap 4: Accounts aanmaken
-
-1. **Authentication** › **Users** › **Add user** › **Create new user**.
-2. Jouw e-mailadres + een **nieuw** wachtwoord (niet dat van Finance of Be Strong). Vink **Auto Confirm User** aan.
-3. Doe hetzelfde voor Stephanie (of later).
-
-De **eerste** persoon die inlogt, wordt automatisch lid. Stephanie voeg je daarna toe in de app: **Instellingen › Toegang › Iemand uitnodigen**. Zonder uitnodiging ziet een account niets.
-
-### Stap 5: Adressen instellen
-
-1. **Authentication** › **URL Configuration**:
-   - Site URL: `https://byornn1993.github.io/Our-Network/`
-   - Redirect URLs: dezelfde, plus `http://localhost:5173`
-2. **Project Settings** › **API Keys**: kopieer de **Project URL** en de **Publishable key** (`sb_publishable_…`) en stuur ze naar Claude. Die twee zijn veilig om te delen. Stuur **niet** de *secret* key.
+Je hoeft geen nieuwe gebruiker te maken: je logt in met je account van **Be Strong**.
 
 ---
 
-## Deel B — GitHub (Claude helpt)
+## Deel B — De app online zetten (Claude, met jouw akkoord)
 
-1. Nieuwe repository **Our-Network** onder je account (net als Be Strong).
-2. **Settings › Pages › Source: GitHub Actions**.
-3. **Settings › Secrets and variables › Actions › Variables**: `VITE_SUPABASE_URL` en `VITE_SUPABASE_PUBLISHABLE_KEY`.
-4. Code pushen → na ±2 minuten staat de app op `https://byornn1993.github.io/Our-Network/`.
-
-## Deel C — Op je iPhone
-
-Open de link in **Safari** › **Deel** › **Zet op beginscherm**. Stephanie doet hetzelfde op haar toestel.
+1. Een GitHub-repository **Our-Network** maken (zoals Be-strong) en de code pushen.
+2. In de repository: **Settings › Pages › Source: GitHub Actions**.
+3. **Settings › Secrets and variables › Actions › Variables**: dezelfde twee waarden als bij Be-strong:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`
+4. Elke push naar `main` bouwt, test en publiceert de app op **https://byornn1993.github.io/Our-Network/**.
 
 ---
 
-### Gratis limiet
+## Deel C — Je gegevens overzetten uit de artifact
 
-Het gratis Supabase-plan laat 2 actieve projecten toe. Opties:
+1. Open de artifact **B Netwerk** › **Instellingen › Gegevens** › **Back-up downloaden**. De back-up bevat ook de foto's.
+2. Open de app, log in met je Be Strong-account. Je bent automatisch het eerste lid.
+3. **Instellingen › Gegevens** › zet **Back-up gaat voor** aan › **Bestand kiezen** › kies de back-up.
+4. Controleer het netwerk, Our Story en de profielfoto's.
+5. **Instellingen › Profielen** › tik bij je eigen profiel op **Dit ben ik** (de koppeling uit de artifact geldt hier niet).
 
-1. **Aanbevolen:** een tweede Supabase-organisatie of -account voor Our Network (blijft gratis, volledig gescheiden).
-2. Upgraden naar het Pro-plan (betalend).
-3. Our Network in het bestaande Be Strong-project zetten. Kan technisch (alle tabellen hebben eigen namen), maar dan delen twee apps één database. Alleen doen als je dat uitdrukkelijk wilt.
+Daarna gebruik je enkel nog de app. De artifact kan blijven bestaan als reserve, maar wat je daar nog wijzigt, komt niet in de app.
+
+---
+
+## Deel D — Stephanie toevoegen
+
+1. In de app: **Instellingen › Toegang** › nodig Stephanie uit met haar e-mailadres.
+2. In Supabase: **Authentication › Users › Add user › Create new user** met haar e-mailadres en een tijdelijk wachtwoord (registreren staat uit).
+   - Let op: Be Strong maakt voor elke nieuwe gebruiker automatisch een leeg Be Strong-profiel aan. Dat is onschuldig: zonder workouts ziet ze in Be Strong niets van jou.
+3. Stephanie installeert de app (zie hieronder), logt in en is meteen lid.
+
+---
+
+## Installeren op de iPhone
+
+1. Open **https://byornn1993.github.io/Our-Network/** in **Safari**.
+2. Tik op **Deel** (vierkant met pijl) › **Zet op beginscherm** › **Voeg toe**.
+3. Open Our Network voortaan via het icoon.
+
+Bij een nieuwe versie toont de app bovenaan **Nieuwe versie beschikbaar**. Tik op **Vernieuwen**.
+
+---
+
+## Gratis plan
+
+Our Network deelt het project met Be Strong en Boodschappenlijst: samen 500 MB database en 1 GB foto-opslag. Foto's worden verkleind (max. 1600 px), dus dat is ruim voldoende. Maak af en toe zelf een back-up via **Instellingen › Gegevens**.

@@ -115,7 +115,13 @@ export default function LoginPage() {
     <AuthScreen>
       <form onSubmit={submit} className="card space-y-3 p-4">
         {isLocalMode && <p className="rounded-lg bg-warn/10 p-2 text-xs text-warn">Lokale testmodus: elk e-mailadres met wachtwoord “dev-password”. Er gaat niets naar Supabase.</p>}
-        {mode === 'reset' && <p className="text-sm text-muted">Vul je e-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.</p>}
+        {mode === 'reset' && (
+          <p className="text-sm text-muted">
+            Vul je e-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.{' '}
+            {!isLocalMode && 'Let op: het nieuwe wachtwoord geldt ook voor Be Strong en Boodschappenlijst (zelfde account).'}
+          </p>
+        )}
+        {mode === 'password' && !isLocalMode && <p className="text-xs text-muted">Log in met je account van Be Strong.</p>}
         <label className="block">
           <span className="label">E-mail</span>
           <input className="field mt-1" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -130,7 +136,7 @@ export default function LoginPage() {
           <p role="alert" className="text-sm text-danger">
             {error}
             {mode === 'password' && /klopt niet/.test(error) && (
-              <span className="mt-1 block text-xs text-muted">Tip: je browser kan het wachtwoord van een andere app (Finance, Be Strong) invullen. Typ het Our Network-wachtwoord zelf.</span>
+              <span className="mt-1 block text-xs text-muted">Tip: gebruik het wachtwoord van Be Strong. Je browser vult misschien dat van Bjorn Finance in, dat is een ander account.</span>
             )}
           </p>
         )}

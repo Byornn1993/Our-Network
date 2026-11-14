@@ -4,9 +4,33 @@
     {
       "name": "our-network-local",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:local", "--", "--port", "5174", "--strictPort"],
+      "runtimeArgs": [
+        "run",
+        "dev:local",
+        "--",
+        "--port",
+        "5174",
+        "--strictPort"
+      ],
       "cwd": "C:\\Users\\Gebruiker\\OneDrive\\Documenten\\Our Network",
       "port": 5174
+    },
+    {
+      "name": "our-network-pwa",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "exec",
+        "--",
+        "vite",
+        "preview",
+        "--base",
+        "/Our-Network/",
+        "--port",
+        "4174",
+        "--strictPort"
+      ],
+      "cwd": "C:\\Users\\Gebruiker\\OneDrive\\Documenten\\Our Network",
+      "port": 4174
     }
   ]
 }
