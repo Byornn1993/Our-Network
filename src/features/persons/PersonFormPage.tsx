@@ -180,7 +180,7 @@ export default function PersonFormPage() {
                       <span style={{ color: c.color }}>
                         <CatIcon name={c.icon} size={16} />
                       </span>
-                      <span className="flex-1 truncate">{c.name}</span>
+                      <span className="min-w-0 flex-1 leading-tight">{c.name}</span>
                     </button>
                   );
                 })}
