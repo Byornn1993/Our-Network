@@ -6,6 +6,7 @@ import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { useStore } from '@/lib/db/store';
 import { buildFullBackup, download, importBackup, personsCsv } from '@/lib/backup';
 import { Toggle } from '@/components/ui/Form';
+import { toast } from '@/components/ui/Toast';
 import { todayIso } from '@/domain/dates';
 import { isArtifactMode } from '@/lib/backend';
 
@@ -57,7 +58,13 @@ export default function DataSettings() {
     setMsg(null);
     try {
       const r = await importBackup(s, await file.text(), { overwrite });
-      setMsg({ ok: true, text: `Klaar: ${r.added} toegevoegd, ${r.updated} bijgewerkt, ${r.skipped} ongewijzigd, ${r.photos} foto's opgeslagen.` });
+      setMsg({
+        ok: r.photoErrors === 0,
+        text:
+          `Klaar: ${r.added} toegevoegd, ${r.updated} bijgewerkt, ${r.skipped} ongewijzigd, ${r.photos} foto's opgeslagen.` +
+          (r.photoErrors ? ` ${r.photoErrors} foto('s) konden niet opgeslagen worden; voeg die zelf opnieuw toe.` : ''),
+      });
+      toast('Back-up geïmporteerd ✓');
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : String(e) });
     } finally {

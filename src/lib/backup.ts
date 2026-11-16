@@ -17,7 +17,8 @@ const backupSchema = z.object({
   version: z.union([z.literal(1), z.literal(2)]),
   exported_at: z.string(),
   /** Versie 2: foto's per oude opslagsleutel, als data-URL. */
-  files: z.record(z.string(), z.string().startsWith('data:image/')).optional(),
+  // Een onbruikbare foto keurt niet de hele back-up af: die wordt bij het importeren overgeslagen en gemeld.
+  files: z.record(z.string(), z.string()).optional(),
   tables: z.record(z.string(), z.array(z.record(z.string(), z.unknown()).and(z.object({ id: z.string().uuid(), updated_at: z.string() })))),
 });
 
@@ -114,6 +115,8 @@ export interface ImportResult {
   updated: number;
   skipped: number;
   photos: number;
+  /** Foto's die niet opgeslagen konden worden; de rij is wel geïmporteerd, zonder die foto. */
+  photoErrors: number;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -125,17 +128,25 @@ export async function importBackup(s: Store, text: string, opts: { overwrite?: b
   } catch {
     throw new Error('Dit is geen geldige Our Network-back-up (JSON).');
   }
-  const result: ImportResult = { added: 0, updated: 0, skipped: 0, photos: 0 };
+  const result: ImportResult = { added: 0, updated: 0, skipped: 0, photos: 0, photoErrors: 0 };
   const files = parsed.files ?? {};
   const storage = getBackend().storage;
   // Foto uit de back-up opnieuw opslaan onder een sleutel van deze opslag; geeft de nieuwe sleutel.
-  const moved = new Map<string, string>();
+  const moved = new Map<string, string | null>();
+  // Eén foto die niet lukt (verkeerd type, netwerk, opslag vol) mag de rest van de import niet tegenhouden.
   const reupload = async (key: unknown, path: string): Promise<unknown> => {
-    if (typeof key !== 'string' || !files[key]) return key;
+    if (typeof key !== 'string' || !(key in files)) return key;
     if (!moved.has(key)) {
-      const blob = await (await fetch(files[key]!)).blob();
-      moved.set(key, await storage.upload(path, blob));
-      result.photos++;
+      try {
+        const data = files[key]!;
+        if (!data.startsWith('data:image/')) throw new Error('geen afbeelding');
+        const blob = await (await fetch(data)).blob();
+        moved.set(key, await storage.upload(path, blob));
+        result.photos++;
+      } catch {
+        moved.set(key, null);
+        result.photoErrors++;
+      }
     }
     return moved.get(key);
   };

@@ -9,11 +9,16 @@ import { buildBackup, importBackup } from '@/lib/backup';
 
 // Nep-opslag voor foto's bij het importeren van een back-up mét foto's.
 const uploads = vi.hoisted(() => [] as { path: string; size: number }[]);
+const uploadFails = vi.hoisted(() => ({ on: false }));
 vi.mock('@/lib/backend', async (orig) => ({
   ...(await orig<typeof import('@/lib/backend')>()),
   getBackend: () => ({
     storage: {
-      upload: async (path: string, blob: Blob) => (uploads.push({ path, size: blob.size }), path),
+      upload: async (path: string, blob: Blob) => {
+        if (uploadFails.on) throw new Error('opslag weigert');
+        uploads.push({ path, size: blob.size });
+        return path;
+      },
       signedUrls: async () => ({}),
       remove: async () => {},
     },
@@ -266,5 +271,55 @@ describe('sync tussen twee toestellen', () => {
     expect(r.photos).toBe(1);
     expect(uploads[0]!.path).toMatch(new RegExp(`^avatars/persons/${pid}/[0-9a-f-]{36}\\.jpg$`));
     expect(sc.personById.get(pid)?.avatar_path).toBe(uploads[0]!.path);
+  });
+
+  it('zelfde back-up twee keer importeren (eerst zonder, dan met "gaat voor") komt volledig op de server', async () => {
+    const server = fakeServer();
+    const a = device();
+    await syncOnce(a, server.api);
+    await savePerson(await storeOf(a), input('Moeder', VRIEND, { avatar_path: '0123456789abcdef0123456789abcdef' }), { connections: [] });
+    const backup = buildBackup(await storeOf(a));
+    Object.assign((backup.tables.profiles as Record<string, unknown>[]).find((p) => p.id === P1)!, {
+      name: 'Bjorn W',
+      avatar_path: 'fedcba9876543210fedcba9876543210',
+      user_id: 'u_AAAAAAAAAAAAAAAAAAAAAA',
+      updated_at: '2026-10-27T11:12:36.445Z',
+    });
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const json = JSON.stringify({ ...backup, version: 2, files: { '0123456789abcdef0123456789abcdef': png, fedcba9876543210fedcba9876543210: png } });
+
+    const fresh = fakeServer();
+    const b = device();
+    await syncOnce(b, fresh.api);
+    await importBackup(await storeOf(b), json);
+    expect((await syncOnce(b, fresh.api)).blockedBy).toBeNull();
+    await importBackup(await storeOf(b), json, { overwrite: true });
+    const r = await syncOnce(b, fresh.api);
+    expect(r.blockedBy).toBeNull();
+    expect(await b.outbox.count()).toBe(0);
+    expect(fresh.rows('profiles').find((p) => p.id === P1)).toMatchObject({ name: 'Bjorn W', user_id: null });
+    expect(String(fresh.rows('profiles').find((p) => p.id === P1)!.avatar_path)).toMatch(/^avatars\/profiles\//);
+  });
+
+  it('een foto die niet lukt, houdt de rest van de import niet tegen', async () => {
+    const server = fakeServer();
+    const a = device();
+    await syncOnce(a, server.api);
+    const pid = await savePerson(await storeOf(a), input('Moeder', VRIEND, { avatar_path: 'aaaa' }), { connections: [] });
+    const qid = await savePerson(await storeOf(a), input('Vader', VRIEND, { avatar_path: 'bbbb' }), { connections: [] });
+    const json = JSON.stringify({ ...buildBackup(await storeOf(a)), version: 2, files: { aaaa: 'data:text/plain;base64,aGFsbG8=', bbbb: 'data:image/png;base64,iVBORw0KGgo=' } });
+
+    const b = device();
+    await syncOnce(b, server.api);
+    uploadFails.on = true;
+    try {
+      const r = await importBackup(await storeOf(b), json);
+      expect(r.photoErrors).toBe(2); // geen afbeelding + opslag weigert
+      const sb = await storeOf(b);
+      expect(sb.personById.get(pid)).toMatchObject({ first_name: 'Moeder', avatar_path: null });
+      expect(sb.personById.get(qid)).toMatchObject({ first_name: 'Vader', avatar_path: null });
+    } finally {
+      uploadFails.on = false;
+    }
   });
 });
