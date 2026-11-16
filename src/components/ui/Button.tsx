@@ -13,7 +13,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants: Record<Variant, string> = {
   primary: 'bg-accent text-accent-ink hover:bg-[color-mix(in_srgb,var(--accent)_88%,white)] active:brightness-95 font-semibold',
-  secondary: 'bg-card text-text border border-border hover:border-accent',
+  secondary: 'bg-surface-2 text-text border border-border hover:border-accent',
   ghost: 'bg-transparent text-text hover:bg-champ/[.07]',
   danger: 'bg-danger/15 text-danger border border-danger/30 hover:bg-danger/25',
 };

@@ -16,6 +16,8 @@ import { DateField, Field, FormSection, Toggle } from '@/components/ui/Form';
 import { PersonPicker, ProfileToggles } from '@/components/PersonPicker';
 import { CatIcon } from '@/components/icons';
 import { EmptyState } from '@/components/ui/States';
+import { useLeaveGuard } from '@/components/useLeaveGuard';
+import { toast } from '@/components/ui/Toast';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { canUpload } from '@/lib/backend';
 
@@ -73,6 +75,11 @@ export default function EventFormPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // Onbewaarde wijzigingen: vergelijken met de toestand bij het openen van het formulier.
+  const snapshot = JSON.stringify({ f, personIds, profileIds, files: files.length, multiDay });
+  const initial = useRef(snapshot);
+  const { leave, dialog: leaveDialog } = useLeaveGuard(!busy && !uploadError && snapshot !== initial.current);
+  const cancel = () => void leave(() => navigate(-1));
   const input = useRef<HTMLInputElement>(null);
 
   if (editId && !existing) return <EmptyState title="Gebeurtenis niet gevonden" text="Misschien werd ze verwijderd, of is ze privé van de ander." />;
@@ -105,6 +112,7 @@ export default function EventFormPage() {
       is_private: f.is_private,
     };
     await saveEvent(s, data, { personIds, profileIds }, id);
+    toast(existing ? 'Wijzigingen bewaard ✓' : 'Moment bewaard ✓');
 
     if (files.length) {
       // Foto's gaan naar Supabase Storage; dat vraagt verbinding. De gebeurtenis zelf is al veilig bewaard.
@@ -145,7 +153,7 @@ export default function EventFormPage() {
 
   return (
     <form onSubmit={submit} className="mx-auto max-w-2xl px-4 pb-8 md:px-0" noValidate>
-      <PageHeader back title={existing ? 'Moment bewerken' : 'Nieuw moment'} subtitle="Voor Our Story — ook herinneringen van jaren geleden" />
+      <PageHeader back onBack={cancel} title={existing ? 'Moment bewerken' : 'Nieuw moment'} subtitle="Voor Our Story — ook herinneringen van jaren geleden" />
       <div className="mt-2 space-y-6">
         <FormSection title="Wat gebeurde er?">
           <Field label="Titel" required error={errors.title}>
@@ -260,8 +268,8 @@ export default function EventFormPage() {
           )}
         </FormSection>
 
-        <div className="sticky bottom-[calc(var(--nav-h)+var(--safe-bottom)+8px)] z-10 flex gap-2 md:bottom-4">
-          <Button block size="lg" onClick={() => navigate(-1)} disabled={!!busy}>
+        <div className="sticky bottom-[calc(var(--nav-h)+var(--safe-bottom))] z-10 -mx-4 flex gap-2 border-t border-line-2 bg-bg px-4 py-2 md:bottom-0 md:mx-0 md:px-0">
+          <Button block size="lg" onClick={cancel} disabled={!!busy}>
             Annuleren
           </Button>
           <Button block size="lg" variant="primary" type="submit" loading={!!busy}>
@@ -269,6 +277,7 @@ export default function EventFormPage() {
           </Button>
         </div>
       </div>
+      {leaveDialog}
     </form>
   );
 }

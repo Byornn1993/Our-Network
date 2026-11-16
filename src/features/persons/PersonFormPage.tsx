@@ -15,6 +15,8 @@ import { DateField, Field, FormSection, Segmented, Toggle } from '@/components/u
 import { AvatarPicker } from '@/components/AvatarEditor';
 import { CatIcon } from '@/components/icons';
 import { EmptyState } from '@/components/ui/States';
+import { useLeaveGuard } from '@/components/useLeaveGuard';
+import { toast } from '@/components/ui/Toast';
 
 const blankToNull = (v: string) => (v.trim() ? v.trim() : null);
 
@@ -60,6 +62,10 @@ export default function PersonFormPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const uploaded = useRef<string[]>([]);
+  // Onbewaarde wijzigingen: vergelijken met de toestand bij het openen van het formulier.
+  const snapshot = JSON.stringify({ f, connected, change });
+  const initial = useRef(snapshot);
+  const { leave, dialog: leaveDialog } = useLeaveGuard(!busy && snapshot !== initial.current);
 
   if (editId && !existing) return <EmptyState title="Persoon niet gevonden" text="Misschien werd deze persoon verwijderd." />;
 
@@ -119,17 +125,19 @@ export default function PersonFormPage() {
     // oude, vervangen foto's opruimen
     const stale = [...uploaded.current.filter((p) => p !== f.avatar_path), existing?.avatar_path !== f.avatar_path ? existing?.avatar_path : null];
     void removeFiles(stale);
+    toast(existing ? 'Wijzigingen bewaard ✓' : 'Persoon bewaard ✓');
     navigate(`/personen/${id}`, { replace: true });
   };
 
-  const cancel = () => {
-    void removeFiles(uploaded.current);
-    navigate(-1);
-  };
+  const cancel = () =>
+    void leave(() => {
+      void removeFiles(uploaded.current);
+      navigate(-1);
+    });
 
   return (
     <form onSubmit={submit} className="mx-auto max-w-2xl px-4 pb-8 md:px-0" noValidate>
-      <PageHeader back title={existing ? 'Bewerken' : 'Nieuwe persoon'} subtitle={existing ? fullName(existing) : 'Alleen naam en categorie zijn nodig'} />
+      <PageHeader back onBack={cancel} title={existing ? 'Bewerken' : 'Nieuwe persoon'} subtitle={existing ? fullName(existing) : 'Alleen naam en categorie zijn nodig'} />
 
       <div className="my-4">
         <AvatarPicker
@@ -315,7 +323,7 @@ export default function PersonFormPage() {
           </>
         )}
 
-        <div className="sticky bottom-[calc(var(--nav-h)+var(--safe-bottom)+8px)] z-10 flex gap-2 md:bottom-4">
+        <div className="sticky bottom-[calc(var(--nav-h)+var(--safe-bottom))] z-10 -mx-4 flex gap-2 border-t border-line-2 bg-bg px-4 py-2 md:bottom-0 md:mx-0 md:px-0">
           <Button block size="lg" onClick={cancel}>
             Annuleren
           </Button>
@@ -324,6 +332,7 @@ export default function PersonFormPage() {
           </Button>
         </div>
       </div>
+      {leaveDialog}
     </form>
   );
 }

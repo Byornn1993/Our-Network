@@ -173,7 +173,7 @@ export function TimelineList({ items, showPerson = true }: { items: TimelineItem
     <div className="space-y-8">
       {years.map((y) => (
         <section key={y.year} aria-label={String(y.year)}>
-          <div className="sticky top-0 z-10 -mx-1 mb-3 flex items-baseline gap-3 bg-bg/90 px-1 py-2 backdrop-blur" style={{ top: 'var(--safe-top)' }}>
+          <div className="sticky top-0 z-10 -mx-1 mb-3 flex items-baseline gap-3 bg-bg/95 px-1 py-2" style={{ top: 'var(--safe-top)' }}>
             <h2 className="text-2xl font-bold tracking-tight">{y.year}</h2>
             <span className="text-xs text-muted">
               {y.count} {y.count === 1 ? 'moment' : 'momenten'}

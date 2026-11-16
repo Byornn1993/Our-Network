@@ -124,7 +124,7 @@ export default function NetworkPage() {
             </button>
           )}
           {results.length > 0 && (
-            <ul className="absolute inset-x-0 top-full z-20 mt-1 overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
+            <ul className="absolute inset-x-0 top-full z-20 mt-1 overflow-hidden rounded-2xl border border-border bg-surface-2 shadow-xl">
               {results.map((p) => {
                 const c = s.categoryById.get(p.category_id);
                 return (
@@ -198,7 +198,7 @@ export default function NetworkPage() {
         {active.length > 0 &&
           !isReadOnly() &&
           (editMode ? (
-            <div className="absolute inset-x-3 top-2 mx-auto flex max-w-md items-center gap-2 rounded-2xl border border-accent/50 bg-card/95 p-2 pl-3 text-sm shadow-xl backdrop-blur">
+            <div className="absolute inset-x-3 top-2 mx-auto flex max-w-md items-center gap-2 rounded-2xl border border-accent/50 bg-surface-2 p-2 pl-3 text-sm shadow-xl">
               <Move size={16} className="shrink-0 text-accent" />
               <span className="min-w-0 flex-1 leading-tight">
                 Sleep iemand naar een nieuwe plek<span className="hidden sm:inline">. Wordt bewaard, ook voor de ander</span>.
@@ -217,7 +217,7 @@ export default function NetworkPage() {
           ))}
 
         {active.length === 0 && (
-          <div className="absolute inset-x-4 bottom-4 mx-auto max-w-sm rounded-2xl border border-border bg-card/95 p-4 text-center shadow-xl backdrop-blur">
+          <div className="absolute inset-x-4 bottom-4 mx-auto max-w-sm rounded-2xl border border-border bg-surface-2 p-4 text-center shadow-xl">
             <p className="font-semibold">Jullie netwerk is nog leeg</p>
             <p className="mt-1 text-sm text-muted">Voeg de eerste persoon toe. Familie komt het dichtst bij het middelpunt.</p>
             <Button variant="primary" className="mt-3" onClick={() => navigate('/personen/nieuw')} icon={<UserPlus size={16} />}>

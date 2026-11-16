@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { toast } from '@/components/ui/Toast';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CalendarDays, ChevronLeft, ImagePlus, Lock, MapPin, NotebookPen, Pencil, Star, Tag, Trash2 } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
@@ -104,6 +105,7 @@ export default function EventPage() {
     setView(null);
     await deletePhoto(p.id);
     void removeFiles([p.storage_path, p.thumb_path]);
+    toast('Foto verwijderd ✓');
   };
 
   const remove = async () => {
@@ -114,8 +116,9 @@ export default function EventPage() {
       danger: true,
     });
     if (!ok) return;
-    await deleteEvent(e.id);
+    const undo = await deleteEvent(e.id);
     navigate('/story', { replace: true });
+    toast('Moment verwijderd', { label: 'Ongedaan maken', onClick: () => void undo().then(() => toast('Teruggezet ✓')) });
   };
 
   return (

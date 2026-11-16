@@ -3,12 +3,12 @@ import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { IconButton } from './Button';
 
-export function PageHeader({ title, back, actions, subtitle }: { title: ReactNode; back?: boolean | string; actions?: ReactNode; subtitle?: ReactNode }) {
+export function PageHeader({ title, back, onBack, actions, subtitle }: { title: ReactNode; back?: boolean | string; onBack?: () => void; actions?: ReactNode; subtitle?: ReactNode }) {
   const navigate = useNavigate();
   return (
     <header className="flex items-center gap-1 px-4 pb-2 pt-4 md:px-0">
       {back && (
-        <IconButton label="Terug" className="-ml-3" onClick={() => (typeof back === 'string' ? navigate(back) : navigate(-1))}>
+        <IconButton label="Terug" className="-ml-3" onClick={() => (onBack ? onBack() : typeof back === 'string' ? navigate(back) : navigate(-1))}>
           <ChevronLeft size={24} />
         </IconButton>
       )}

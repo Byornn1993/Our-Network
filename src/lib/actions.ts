@@ -155,11 +155,16 @@ export async function restorePerson(p: Person): Promise<void> {
  * Persoon verwijderen. Gebeurtenissen blijven bestaan (ze kunnen over meerdere mensen gaan);
  * de koppeling blijft bewaard zodat de herinnering compleet blijft. Enkel de kaartpositie verdwijnt.
  */
-export async function deletePerson(s: Store, p: Person): Promise<void> {
+/** Ongedaan maken van een verwijdering: dezelfde rijen terug zichtbaar (soft delete maakt dat mogelijk). */
+export type Undo = () => Promise<void>;
+const undoOf = (changes: Change[]): Undo => () => write(changes.map((c) => change(c.table, { id: c.row.id, deleted_at: null } as never)));
+
+export async function deletePerson(s: Store, p: Person): Promise<Undo> {
   const changes: Change[] = [softDelete('persons', p.id)];
   if (s.network_positions.some((n) => n.id === p.id)) changes.push(softDelete('network_positions', p.id));
   for (const r of s.relationships.filter((r) => r.person_id === p.id || r.related_person_id === p.id)) changes.push(softDelete('relationships', r.id));
   await write(changes);
+  return undoOf(changes);
 }
 
 export async function updateHistoryEntry(id: string, patch: { effective_date: string; date_precision: DatePrecision; description: string | null }): Promise<void> {
@@ -255,8 +260,10 @@ export async function saveEvent(s: Store, input: EventInput, links: { personIds:
 }
 
 /** Herinnering verwijderen (soft delete). Foto's blijven in de opslag tot ze apart verwijderd worden. */
-export async function deleteEvent(eventId: string): Promise<void> {
-  await write([softDelete('events', eventId)]);
+export async function deleteEvent(eventId: string): Promise<Undo> {
+  const changes = [softDelete('events', eventId)];
+  await write(changes);
+  return undoOf(changes);
 }
 
 export async function addEventPhotos(

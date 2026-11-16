@@ -411,7 +411,7 @@ export function NetworkMap({
       {/* hover-preview (desktop) */}
       {hovered && hoveredPos && !drag && (
         <div
-          className="pointer-events-none absolute z-10 w-56 -translate-x-1/2 rounded-xl border border-border bg-card p-3 text-sm shadow-xl"
+          className="pointer-events-none absolute z-10 w-56 -translate-x-1/2 rounded-xl border border-border bg-surface-2 p-3 text-sm shadow-xl"
           style={{ left: view.x + hoveredPos.x * view.k, top: view.y + (hoveredPos.y + hovered.size / 2) * view.k + 10 }}
         >
           <p className="font-semibold">{hovered.name}</p>
@@ -419,7 +419,7 @@ export function NetworkMap({
         </div>
       )}
 
-      <div className="absolute bottom-3 right-2 flex flex-col gap-0.5 rounded-2xl border border-border bg-card/90 p-0.5 backdrop-blur [&>button]:min-h-[40px] [&>button]:min-w-[40px]">
+      <div className="absolute bottom-3 right-2 flex flex-col gap-0.5 rounded-2xl border border-border bg-surface-2 p-0.5 [&>button]:min-h-[40px] [&>button]:min-w-[40px]">
         <IconButton label="Inzoomen" onClick={() => zoomAt(1.3, size.w / 2, size.h / 2, true)}>
           <Plus size={18} />
         </IconButton>

@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
+import { toast } from '@/components/ui/Toast';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   Archive,
@@ -125,7 +126,10 @@ export default function PersonPage() {
       message: 'Archiveren haalt deze persoon van de kaart, maar bewaart alles: profiel, geschiedenis en herinneringen. Je kunt dit altijd terugdraaien.',
       confirmLabel: 'Archiveren',
     });
-    if (ok) await archivePerson(person, { date: todayIso(), precision: 'day' }, null);
+    if (ok) {
+      await archivePerson(person, { date: todayIso(), precision: 'day' }, null);
+      toast(`${name} gearchiveerd ✓`);
+    }
   };
 
   const doDelete = async () => {
@@ -145,8 +149,9 @@ export default function PersonPage() {
       danger: true,
     });
     if (!ok) return;
-    await deletePerson(s, person);
+    const undo = await deletePerson(s, person);
     navigate('/personen', { replace: true });
+    toast(`${name} verwijderd`, { label: 'Ongedaan maken', onClick: () => void undo().then(() => toast('Teruggezet ✓')) });
   };
 
   return (

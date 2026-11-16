@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from '@/components/ui/Toast';
 import { Sheet } from '@/components/ui/Sheet';
 import { Button } from '@/components/ui/Button';
 import { Field, Segmented } from '@/components/ui/Form';
@@ -38,6 +39,7 @@ function Inner({ onClose, personId, edit }: { onClose: () => void; personId?: st
       description: description.trim() || null,
       since: since || null,
     });
+    toast('Relatie bewaard ✓');
     onClose();
   };
 
