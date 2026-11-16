@@ -51,12 +51,52 @@ Gecontroleerd en in orde (geen actie): `.gitignore` (dist, dist-artifact, dist-e
 
 ## 3. Uitgevoerd
 
-_(wordt per onderdeel aangevuld)_
+| # | Wat | Commit |
+|---|---|---|
+| 1 | Import: elke foto apart opgevangen; de rij wordt toch geïmporteerd (zonder die foto), aantal mislukte foto's gemeld. Ongeldige foto keurt de back-up niet meer af. Tests: dubbele import (zonder en met "gaat voor") komt volledig op de server; mislukte foto's houden niets tegen. | ef87ea0 |
+| 3, 4 | `zod` niet meer in de opstartbundel; `crypto.randomUUID` i.p.v. uuid v4. | fce7436 |
+| — | Hoofdschermen stil vooraf ophalen 2,5 s na het eerste scherm. | 6b21ebc |
+| 5, 6 | "Bewaard ✓" na opslaan (persoon, moment, relatie), meldingen na archiveren en foto verwijderen; persoon of moment verwijderen met **Ongedaan maken**; waarschuwing bij Annuleren/terug/sluiten met onbewaarde wijzigingen; knoppenbalk onder formulieren met eigen achtergrond; huisstijl zoals Be Strong (gloed op `body::before`, doorschijnende `--card`/`--field`, dekkende sheets, meldingen en zwevende kaartknoppen); geen backdrop-blur op de jaarkop (iOS). | 79282bb, da3046a |
+| 7 | 29 februari: in een gewoon jaar op 28 februari gevierd, met test. | 9a809bd |
+| 9 | Opgesplitst zonder gedragswijziging: `PersonPage` (426 → 383), `NetworkMap` (443 → 419), `EventPage` (→ 222) met `PersonSections`, `HistoryEditSheet`, `SvgAvatar`, `EventPhotos`. `AuthScreen` apart zodat het inlogscherm echt lazy laadt. | 59f66ac, 1e8b98c |
+| — | Ongebruikte code weg: `CardHeader`, `Stat`, `Tabs`, `RING_LABEL`, `AnyRow`, `getSyncStatus`, `useNow.ts` (gecontroleerd met een zoektocht over src en tests). | 58c1eb4 |
+| — | Afhankelijkheden zonder grote versiesprong: react-router-dom 6.30.6 (XSS/open redirect), @supabase/supabase-js 2.50.0 (auth-js-lek; de nieuwste 2.119 zou +28 KB gzip kosten), uuid 11.1.1; dev: vite 5.4.21, vitest 2.1.9, postcss 8.5.33, eslint 9.39.5. | 4e4fcbb |
+| 10 | `PLAN-ARTIFACT.md` en `PROMPT-VERDER-ALS-ARTIFACT.md` naar `docs/archief/`; `PLAN.md` gemarkeerd als origineel ontwerp. | 3c58a94 |
+| — | Tests: e2e "koppel, moment met foto, verwijderen + ongedaan maken, waarschuwing bij verlaten"; unit: ongedaan maken (lokaal + server), kaart met 0/1 persoon en een partner die er niet is. | 1e8b98c |
+
+Probleem 2 (conflict blokkeert de wachtrij) bleek al zichtbaar: op mobiel verschijnt dan een rode synchronisatiebalk bovenaan, met link naar Synchronisatie. Geen wijziging nodig.
+
+Schermafbeeldingen (375 px) in [screenshots/](screenshots/): `voor-dashboard-375` / `na-dashboard-375` (gloed en doorschijnende kaarten), `voor-formulier-375` / `na-formulier-375` (knoppenbalk met eigen achtergrond i.p.v. zwevend over de tekst), `na-personen-licht-375` (licht thema).
 
 ## 4. Bewust niet gedaan
 
-_(wordt aangevuld)_
+| Wat | Waarom |
+|---|---|
+| `NetworkMap` verder opsplitsen (slepen/zoomen in een eigen hook) | Raakt de aanraakbediening; zonder test op een echte iPhone te riskant. Kandidaat voor een volgende ronde. |
+| `lib/actions.ts` (≈300) en `backend/artifact.ts` (299) opsplitsen | Hangen samen met de sync en de artifact-reserve; geen winst voor de gebruiker. |
+| 24 lint-waarschuwingen `react-refresh/only-export-components` | Enkel van belang voor herladen tijdens ontwikkelen; geen invloed op de app. (Door de nieuwere eslint-plugin telt hij er nu 24 i.p.v. 12; zelfde regel.) |
+| React Router 7, zod 4, Playwright 1.65, sharp 0.35, Vite 6+, TypeScript 7 | Grote versiesprongen; zie voorstellen hieronder. |
+| Batchen van outbox-items naar Supabase | Bij de huidige hoeveelheid (honderden rijen) geen merkbaar verschil; de import van 14-11 ging in enkele seconden. |
 
-## 5. Meetresultaten na
+## 5. Meetresultaten na (16-11-2026, commit 1e8b98c)
 
-_(wordt aangevuld)_
+| Controle | Vóór | Na |
+|---|---|---|
+| typecheck | ✅ | ✅ |
+| lint | 0 fouten, 12 waarschuwingen | 0 fouten, 24 waarschuwingen (zelfde regel, nieuwere plugin) |
+| unit + RLS (Vitest) | 52 | **56** ✅ |
+| e2e (Playwright) | 3 | **4** ✅ |
+| build / build:artifact | ✅ / ✅ | ✅ / ✅ |
+| Opstart-JS (gzip) | ≈ 168 KB | **≈ 156 KB** (react 53,8 · data 33,3 · index 34,1 · supabase 31,2 · overig 3,7) |
+| `data`-chunk | 47,2 KB | 33,3 KB |
+| Inlogscherm | in de opstartbundel | eigen chunk (1,5 KB) |
+| npm audit (productie) | 7 (waarvan hoog: react-router) | 3: react-router (middel, enkel op te lossen met v7), zod (hoog, enkel met v4) |
+
+`tests/rls/shared-project.test.ts` (Be Strong en Boodschappenlijst ongemoeid) blijft groen. Er is **geen** nieuwe migratie: niets aan de database gewijzigd.
+
+## 6. Voorstellen die jouw beslissing nodig hebben
+
+1. **zod 4** (hoog lek "geheugen uitputten bij te grote invoer"). Wordt enkel gebruikt bij het importeren van je eigen back-upbestand, dus het risico is klein. Upgrade is een grote versie: kleine aanpassing in `backup.ts` + tests.
+2. **React Router 7** (resterend middelzwaar lek). Grote versie; vraagt een migratie van de routes. Voor deze app (geen server, geen redirects uit gebruikersinvoer) is het risico laag.
+3. **Playwright 1.65** (enkel testgereedschap, niet in de app): vraagt een nieuwe browserdownload (~150 MB).
+4. **Pushen** van deze 12 commits naar GitHub (daarna deployt Actions automatisch naar Pages).
