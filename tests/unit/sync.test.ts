@@ -245,6 +245,17 @@ describe('sync tussen twee toestellen', () => {
     await expect(importBackup(await storeOf(b), '{"foo":1}')).rejects.toThrow(/geen geldige/);
   });
 
+  it('oudere back-up met een id zonder geldig versiecijfer wordt nog aanvaard (zod 4)', async () => {
+    const a = device();
+    await savePerson(await storeOf(a), input('Oud', VRIEND), { connections: [] });
+    const backup = buildBackup(await storeOf(a));
+    const old = '12345678-1234-0234-1234-123456789abc';
+    backup.tables.persons = (backup.tables.persons ?? []).map((p) => ({ ...(p as object), id: old }));
+    const b = device();
+    await importBackup(await storeOf(b), JSON.stringify(backup));
+    expect((await storeOf(b)).persons.some((p) => p.id === old)).toBe(true);
+  });
+
   it("overzetten vanuit de artifact: foto's opnieuw opgeslagen, artifact-koppeling weg, back-up gaat voor", async () => {
     const server = fakeServer();
     const a = device();

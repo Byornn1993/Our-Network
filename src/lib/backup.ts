@@ -19,7 +19,7 @@ const backupSchema = z.object({
   /** Versie 2: foto's per oude opslagsleutel, als data-URL. */
   // Een onbruikbare foto keurt niet de hele back-up af: die wordt bij het importeren overgeslagen en gemeld.
   files: z.record(z.string(), z.string()).optional(),
-  tables: z.record(z.string(), z.array(z.record(z.string(), z.unknown()).and(z.object({ id: z.string().uuid(), updated_at: z.string() })))),
+  tables: z.record(z.string(), z.array(z.record(z.string(), z.unknown()).and(z.object({ id: z.guid(), updated_at: z.string() })))),
 });
 
 export function buildBackup(s: Store) {
