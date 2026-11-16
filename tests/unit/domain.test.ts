@@ -84,6 +84,10 @@ describe('datums', () => {
     expect(durationSince('2026-08-20', new Date(2026, 9, 27))).toBe('2 maanden');
     expect(daysUntilBirthday('1992-10-27', new Date(2026, 9, 27))).toBe(0);
     expect(daysUntilBirthday('1992-10-26', new Date(2026, 9, 27))).toBe(364);
+    // 29 februari: in een gewoon jaar op 28 februari, in een schrikkeljaar op 29 februari
+    expect(daysUntilBirthday('2000-02-29', new Date(2027, 1, 28))).toBe(0);
+    expect(daysUntilBirthday('2000-02-29', new Date(2027, 2, 1))).toBe(365); // volgende: 29-02-2028
+    expect(daysUntilBirthday('2000-02-29', new Date(2028, 1, 28))).toBe(1);
   });
   it('initialen', () => {
     expect(initials('Sophie Peeters')).toBe('SP');

@@ -51,12 +51,20 @@ export function ageOn(birth: string, now = new Date()): number {
   return differenceInYears(now, parseDay(birth));
 }
 
+const isLeap = (y: number) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+
+/** Verjaardag in een bepaald jaar. Wie op 29 februari jarig is, viert in een gewoon jaar op 28 februari. */
+function birthdayIn(year: number, b: Date): Date {
+  const leapDay = b.getMonth() === 1 && b.getDate() === 29;
+  return new Date(year, b.getMonth(), leapDay && !isLeap(year) ? 28 : b.getDate());
+}
+
 /** Aantal dagen tot de volgende verjaardag (0 = vandaag). */
 export function daysUntilBirthday(birth: string, now = new Date()): number {
   const b = parseDay(birth);
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let next = new Date(today.getFullYear(), b.getMonth(), b.getDate());
-  if (next < today) next = new Date(today.getFullYear() + 1, b.getMonth(), b.getDate());
+  let next = birthdayIn(today.getFullYear(), b);
+  if (next < today) next = birthdayIn(today.getFullYear() + 1, b);
   return Math.round((next.getTime() - today.getTime()) / 86_400_000);
 }
 
