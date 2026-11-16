@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            react: ['react', 'react-dom', 'react-router-dom'],
+            react: ['react', 'react-dom', 'react-router', 'react-router-dom'],
             data: ['dexie', 'dexie-react-hooks', 'uuid'], // zod niet: enkel nodig bij back-up importeren (laadt met dat scherm)
             ...(artifact ? {} : { supabase: ['@supabase/supabase-js'] }),
           },
