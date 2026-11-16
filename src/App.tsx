@@ -3,7 +3,7 @@ import { BrowserRouter, HashRouter, Navigate, Outlet, Route, Routes } from 'reac
 import { isArtifactMode } from '@/lib/backend';
 import { ShieldAlert } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
-import { AuthScreen } from '@/features/auth/LoginPage';
+import { AuthScreen } from '@/features/auth/AuthScreen';
 import { AppShell } from '@/components/layout/AppShell';
 import { Spinner } from '@/components/ui/States';
 import { Button } from '@/components/ui/Button';

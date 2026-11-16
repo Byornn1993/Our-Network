@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/States';
-import { AuthScreen } from './LoginPage';
+import { AuthScreen } from './AuthScreen';
 import { useAuth } from './AuthProvider';
 
 /**

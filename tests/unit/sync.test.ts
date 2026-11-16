@@ -4,7 +4,7 @@ import { buildStore, type Store } from '@/lib/db/store';
 import { SYNC_TABLES, type SyncTable } from '@/lib/db/types';
 import { change, write } from '@/lib/db/repo';
 import { RemoteError, resolveConflict, syncOnce, type RemoteApi } from '@/lib/sync/engine';
-import { archivePerson, deletePerson, firstMeetingOf, saveEvent, savePerson, type PersonInput } from '@/lib/actions';
+import { archivePerson, deleteEvent, deletePerson, firstMeetingOf, saveEvent, saveRelationship, savePerson, type PersonInput } from '@/lib/actions';
 import { buildBackup, importBackup } from '@/lib/backup';
 
 // Nep-opslag voor foto's bij het importeren van een back-up mét foto's.
@@ -321,5 +321,30 @@ describe('sync tussen twee toestellen', () => {
     } finally {
       uploadFails.on = false;
     }
+  });
+
+  it('verwijderen ongedaan maken zet persoon, relatie en moment terug, ook op de server', async () => {
+    const server = fakeServer();
+    const a = device();
+    await syncOnce(a, server.api);
+    const p1 = await savePerson(await storeOf(a), input('Anna', VRIEND), { connections: [] });
+    const p2 = await savePerson(await storeOf(a), input('Marc', VRIEND), { connections: [] });
+    await saveRelationship(await storeOf(a), { personId: p1, relatedId: p2, type: 'partner', description: null, since: null });
+    await syncOnce(a, server.api);
+    const undoPerson = await deletePerson(await storeOf(a), (await storeOf(a)).personById.get(p1)!);
+    expect((await storeOf(a)).persons.some((p) => p.id === p1)).toBe(false);
+    expect((await storeOf(a)).relationships).toHaveLength(0);
+    await undoPerson();
+    await syncOnce(a, server.api);
+    expect((await storeOf(a)).persons.some((p) => p.id === p1)).toBe(true);
+    expect((await storeOf(a)).relationships).toHaveLength(1);
+    expect(server.rows('persons').find((p) => p.id === p1)?.deleted_at).toBeNull();
+
+    const eid = crypto.randomUUID();
+    await saveEvent(await storeOf(a), { title: 'Feest', description: null, personal_note: null, event_date: '2026-11-01', date_precision: 'day', event_end_date: null, event_category_id: MEMORY, theme: null, location: null, is_highlight: false, is_private: false }, { personIds: [p1], profileIds: [] }, eid);
+    const undoEvent = await deleteEvent(eid);
+    expect((await storeOf(a)).eventById.has(eid)).toBe(false);
+    await undoEvent();
+    expect((await storeOf(a)).eventById.get(eid)?.title).toBe('Feest');
   });
 });

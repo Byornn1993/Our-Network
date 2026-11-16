@@ -50,6 +50,16 @@ describe('netwerklayout', () => {
     expect(minClearance([...l.placed.values()])).toBeGreaterThan(4);
   });
 
+  it('lege kaart, één persoon, en een partner die niet (meer) op de kaart staat', () => {
+    expect(layoutNetwork([]).placed.size).toBe(0);
+    const one = layoutNetwork([node('solo', 2)]).placed.get('solo')!;
+    expect(Math.hypot(one.x, one.y)).toBeCloseTo(BASE_RADII[2], 0);
+    // partner verwijst naar iemand die er niet is (gearchiveerd of uitgefilterd): gewoon alleen geplaatst
+    const l = layoutNetwork([node('a', 3, { partner: 'weg' }), node('b', 3)]);
+    expect(l.placed.size).toBe(2);
+    expect(l.placed.get('a')!.ring).toBe(3);
+  });
+
   it('volle binnenringen duwen buitenringen naar buiten', () => {
     const many = Array.from({ length: 60 }, (_, i) => node(`f${i}`, 1));
     const l = layoutNetwork([...many, node('far', 4)]);

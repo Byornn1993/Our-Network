@@ -72,3 +72,50 @@ test('een niet-uitgenodigde gebruiker krijgt geen toegang', async ({ page }) => 
   await page.getByRole('button', { name: 'Inloggen' }).click();
   await expect(page.getByText('Geen toegang')).toBeVisible();
 });
+
+// Klein maar geldig PNG-bestand (8×8, goud) om een foto te uploaden.
+const PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGPYsJsBK2IYlRBEAgDx3ivfUPzyeQAAAABJRU5ErkJggg==',
+  'base64',
+);
+
+test('koppel, moment met foto, verwijderen en ongedaan maken, waarschuwing bij verlaten', async ({ page }) => {
+  await login(page, 'koppel@e2e.test');
+  await addPerson(page, 'Anna', 'Familie');
+  await addPerson(page, 'Marc', 'Familie');
+
+  // Relatie: Anna en Marc zijn partners → op de kaart verbonden met een partnerlijn.
+  await page.goto('/netwerk');
+  await page.getByRole('button', { name: 'Toevoegen' }).last().click();
+  await page.getByRole('button', { name: /Nieuwe relatie/ }).click();
+  const zoek = page.getByLabel('Zoek een persoon');
+  await zoek.first().fill('Anna');
+  await page.getByRole('dialog').getByRole('button', { name: /Anna/ }).first().click();
+  await zoek.last().fill('Marc');
+  await page.getByRole('dialog').getByRole('button', { name: /Marc/ }).last().click();
+  await page.getByRole('radio', { name: 'Partner' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Opslaan' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Relatie bewaard' })).toBeVisible();
+  await expect(page.locator('line[stroke="var(--champ)"]')).toHaveCount(1);
+
+  // Moment met foto → foto op de pagina van het moment en in Our Story.
+  await page.goto('/story/nieuw');
+  await page.getByPlaceholder('Bv. Eerste ontmoeting met Thomas').fill('Trouwfeest');
+  await page.locator('input[type=file]').setInputFiles({ name: 'feest.png', mimeType: 'image/png', buffer: PNG });
+  await page.getByRole('button', { name: 'Opslaan' }).click();
+  await expect(page.getByRole('heading', { name: 'Trouwfeest' })).toBeVisible();
+  await expect(page.locator('main img').first()).toBeVisible();
+
+  // Verwijderen en meteen ongedaan maken.
+  await page.getByRole('button', { name: /Verwijderen/ }).first().click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Verwijderen' }).click();
+  await expect(page).toHaveURL(/\/story$/);
+  await page.getByRole('button', { name: 'Ongedaan maken' }).click();
+  await expect(page.getByText('Trouwfeest')).toBeVisible();
+
+  // Onbewaarde wijzigingen: Annuleren vraagt eerst bevestiging.
+  await page.goto('/personen/nieuw');
+  await page.getByPlaceholder('Voornaam').fill('Half ingevuld');
+  await page.getByRole('button', { name: 'Annuleren' }).click();
+  await expect(page.getByRole('heading', { name: 'Wijzigingen niet bewaren?' })).toBeVisible();
+});
