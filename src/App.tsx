@@ -15,16 +15,25 @@ import { requestSync } from '@/lib/sync/scheduler';
 // Lazy loading per route
 const LoginPage = lazy(() => import('@/features/auth/LoginPage'));
 const NewPasswordPage = lazy(() => import('@/features/auth/NewPasswordPage'));
-const NetworkPage = lazy(() => import('@/features/network/NetworkPage'));
-const PersonsPage = lazy(() => import('@/features/persons/PersonsPage'));
-const PersonPage = lazy(() => import('@/features/persons/PersonPage'));
-const PersonFormPage = lazy(() => import('@/features/persons/PersonFormPage'));
-const StoryPage = lazy(() => import('@/features/story/StoryPage'));
-const EventPage = lazy(() => import('@/features/story/EventPage'));
-const EventFormPage = lazy(() => import('@/features/story/EventFormPage'));
+const loadNetworkPage = () => import('@/features/network/NetworkPage');
+const NetworkPage = lazy(loadNetworkPage);
+const loadPersonsPage = () => import('@/features/persons/PersonsPage');
+const PersonsPage = lazy(loadPersonsPage);
+const loadPersonPage = () => import('@/features/persons/PersonPage');
+const PersonPage = lazy(loadPersonPage);
+const loadPersonFormPage = () => import('@/features/persons/PersonFormPage');
+const PersonFormPage = lazy(loadPersonFormPage);
+const loadStoryPage = () => import('@/features/story/StoryPage');
+const StoryPage = lazy(loadStoryPage);
+const loadEventPage = () => import('@/features/story/EventPage');
+const EventPage = lazy(loadEventPage);
+const loadEventFormPage = () => import('@/features/story/EventFormPage');
+const EventFormPage = lazy(loadEventFormPage);
 const YearReviewPage = lazy(() => import('@/features/story/YearReviewPage'));
-const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage'));
-const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'));
+const loadDashboardPage = () => import('@/features/dashboard/DashboardPage');
+const DashboardPage = lazy(loadDashboardPage);
+const loadSettingsPage = () => import('@/features/settings/SettingsPage');
+const SettingsPage = lazy(loadSettingsPage);
 const ProfilesSettings = lazy(() => import('@/features/settings/ProfilesSettings'));
 const CategoriesSettings = lazy(() => import('@/features/settings/CategoriesSettings'));
 const EventTypesSettings = lazy(() => import('@/features/settings/EventTypesSettings'));
@@ -32,8 +41,18 @@ const AccessSettings = lazy(() => import('@/features/settings/AccessSettings'));
 const DataSettings = lazy(() => import('@/features/settings/DataSettings'));
 const SyncPage = lazy(() => import('@/features/settings/SyncPage'));
 
+/** Hoofdschermen stil vooraf ophalen kort na het eerste scherm: de eerste tik voelt dan meteen. */
+const PREFETCH = [loadNetworkPage, loadPersonsPage, loadPersonPage, loadPersonFormPage, loadStoryPage, loadEventPage, loadEventFormPage, loadDashboardPage, loadSettingsPage];
+function usePrefetchPages() {
+  useEffect(() => {
+    const t = setTimeout(() => PREFETCH.forEach((load) => void load().catch(() => {})), 2500);
+    return () => clearTimeout(t);
+  }, []);
+}
+
 /** Bij de allereerste start op een toestel: wachten tot de standaardcategorieën binnen zijn. */
 function FirstSyncGate() {
+  usePrefetchPages();
   const s = useStore();
   const sync = useSyncStatus();
   if (s.categories.length > 0 && s.profiles.length > 0) return <Outlet />;
