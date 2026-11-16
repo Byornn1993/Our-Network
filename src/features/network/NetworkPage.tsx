@@ -95,7 +95,7 @@ export default function NetworkPage() {
   };
 
   return (
-    <div className="flex h-[calc(100dvh-var(--nav-h)-var(--safe-bottom)-var(--safe-top))] flex-col md:h-dvh">
+    <div className="flex h-[calc(var(--app-h)-var(--nav-h)-var(--safe-bottom)-var(--safe-top))] flex-col md:h-dvh">
       <div className="shrink-0 px-4 pt-4 md:px-8">
         <SubNav />
         <header className="mt-3 flex items-start gap-3">

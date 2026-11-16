@@ -4,7 +4,7 @@ import { Logo } from '@/components/Logo';
 /** Schermkader voor inloggen, nieuw wachtwoord en meldingen vóór de app (logo, titel, gloed). */
 export function AuthScreen({ children }: { children: ReactNode }) {
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden px-5" style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}>
+    <div className="relative flex min-h-[var(--app-h)] items-center justify-center overflow-hidden px-5" style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}>
       {/* zachte gloed in plaats van een foto */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-[18%] h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--accent)_22%,transparent),transparent_65%)]" />

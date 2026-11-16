@@ -7,6 +7,22 @@
    Donker is de standaard; licht via de themaknop. Componenten gebruiken enkel deze tokens.
    --card en --field zijn doorschijnend (kaarten en velden op de achtergrondgloed);
    --surface-2 is dekkend: voor sheets, pop-ups en meldingen die over de inhoud liggen. */
+/* Schermhoogte. Op iOS geeft dvh bij het openen van de thuisschermapp soms een te kleine hoogte
+   (tot de eerste herberekening), waardoor de menubalk niet onderaan staat. In de geïnstalleerde app
+   zijn er geen browserbalken, dus daar is de vaste volle hoogte (lvh) altijd juist. */
+:root {
+  --app-h: 100dvh;
+}
+@media (display-mode: standalone) {
+  :root {
+    --app-h: 100lvh;
+  }
+  nav.bottom-nav {
+    top: calc(100lvh - var(--nav-h) - var(--safe-bottom));
+    bottom: auto;
+  }
+}
+
 :root,
 :root[data-theme='dark'] {
   --bg: #101418;

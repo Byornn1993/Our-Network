@@ -91,7 +91,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
   const fullBleed = location.pathname === '/netwerk';
 
   return (
-    <div className="min-h-dvh md:flex" style={{ paddingLeft: 'var(--safe-left)', paddingRight: 'var(--safe-right)' }}>
+    <div className="min-h-[var(--app-h)] md:flex" style={{ paddingLeft: 'var(--safe-left)', paddingRight: 'var(--safe-right)' }}>
       {/* Zijbalk: rail op tablet, volledige zijbalk op desktop */}
       <aside className="sticky top-0 z-20 hidden h-dvh shrink-0 flex-col border-r border-line-2 bg-side px-2 py-4 md:flex md:w-[88px] lg:w-[244px] lg:px-4">
         <div className="mb-6 flex items-center gap-3 px-1 md:justify-center lg:justify-start">
@@ -146,7 +146,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
       {/* Onderste navigatie op mobiel: Netwerk · Personen · Toevoegen · Instellingen */}
       <nav
         aria-label="Hoofdnavigatie"
-        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line-2 bg-side md:hidden"
+        className="bottom-nav fixed inset-x-0 bottom-0 z-30 flex border-t border-line-2 bg-side md:hidden"
         style={{ paddingBottom: 'var(--safe-bottom)', height: 'calc(var(--nav-h) + var(--safe-bottom))' }}
       >
         {MOBILE_NAV.map((n) => (
