@@ -75,7 +75,7 @@ Schermafbeeldingen (375 px) in [screenshots/](screenshots/): `voor-dashboard-375
 | `NetworkMap` verder opsplitsen (slepen/zoomen in een eigen hook) | Raakt de aanraakbediening; zonder test op een echte iPhone te riskant. Kandidaat voor een volgende ronde. |
 | `lib/actions.ts` (≈300) en `backend/artifact.ts` (299) opsplitsen | Hangen samen met de sync en de artifact-reserve; geen winst voor de gebruiker. |
 | 24 lint-waarschuwingen `react-refresh/only-export-components` | Enkel van belang voor herladen tijdens ontwikkelen; geen invloed op de app. (Door de nieuwere eslint-plugin telt hij er nu 24 i.p.v. 12; zelfde regel.) |
-| React Router 7, zod 4, Playwright 1.65, sharp 0.35, Vite 6+, TypeScript 7 | Grote versiesprongen; zie voorstellen hieronder. |
+| Playwright 1.65, sharp 0.35, Vite 6+, TypeScript 7 | Grote versiesprongen in ontwikkelgereedschap; geen invloed op de app. |
 | Batchen van outbox-items naar Supabase | Bij de huidige hoeveelheid (honderden rijen) geen merkbaar verschil; de import van 14-11 ging in enkele seconden. |
 
 ## 5. Meetresultaten na (16-11-2026, commit 1e8b98c)
@@ -94,9 +94,17 @@ Schermafbeeldingen (375 px) in [screenshots/](screenshots/): `voor-dashboard-375
 
 `tests/rls/shared-project.test.ts` (Be Strong en Boodschappenlijst ongemoeid) blijft groen. Er is **geen** nieuwe migratie: niets aan de database gewijzigd.
 
-## 6. Voorstellen die jouw beslissing nodig hebben
+## 6. Vervolg na jouw akkoord (16-11-2026)
 
-1. **zod 4** (hoog lek "geheugen uitputten bij te grote invoer"). Wordt enkel gebruikt bij het importeren van je eigen back-upbestand, dus het risico is klein. Upgrade is een grote versie: kleine aanpassing in `backup.ts` + tests.
-2. **React Router 7** (resterend middelzwaar lek). Grote versie; vraagt een migratie van de routes. Voor deze app (geen server, geen redirects uit gebruikersinvoer) is het risico laag.
-3. **Playwright 1.65** (enkel testgereedschap, niet in de app): vraagt een nieuwe browserdownload (~150 MB).
-4. **Pushen** van deze 12 commits naar GitHub (daarna deployt Actions automatisch naar Pages).
+Gepusht (907f593..2e67ace): CI en "Deploy naar GitHub Pages" geslaagd; live app laadt de nieuwe bundels zonder consolefouten.
+
+Daarna, op jouw "doe maar verder":
+
+| Wat | Resultaat | Commit |
+|---|---|---|
+| **zod 4.6.7** | Hoog lek dicht. `z.string().uuid()` is in zod 4 strenger (versiecijfer); vervangen door `z.guid()` zodat oudere back-ups (formaat v1/v2) geldig blijven. Nieuwe test bewijst dat, en faalt met de strenge variant. Enkel het Gegevens-scherm wordt groter (lazy, 29,3 KB gzip); de opstartbundel niet. | 8498ce7 |
+| **React Router 7.18.5** | Laatste lek dicht: `npm audit --omit=dev` geeft **0**. Geen codewijziging nodig (geen future-flags, geen relatieve splat-links). Kost +5,8 KB gzip in de react-chunk (53,8 → 59,6). | 7016d0c |
+
+Controles hierna: typecheck ✅ · lint 0 fouten ✅ · Vitest **57** ✅ · Playwright 4 ✅ · build + build:artifact ✅. Opstart-JS nu ≈ 162 KB (nog steeds onder de 168 KB van de nulmeting).
+
+Nog open (enkel ontwikkelgereedschap): Playwright 1.65 (nieuwe browserdownload ~150 MB).
