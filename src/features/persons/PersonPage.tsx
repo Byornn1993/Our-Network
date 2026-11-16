@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from '@/components/ui/Toast';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -23,71 +23,23 @@ import {
 } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
 import type { Relationship, RelationshipHistory } from '@/lib/db/types';
-import { archivePerson, deletePerson, restorePerson, setPersonAvatar, updateHistoryEntry } from '@/lib/actions';
+import { archivePerson, deletePerson, restorePerson, setPersonAvatar } from '@/lib/actions';
 import { removeFiles, uploadAvatar } from '@/lib/images';
 import { ageOn, daysUntilBirthday, durationSince, formatDate, todayIso } from '@/domain/dates';
 import { fullName, RELATIONSHIP_LABEL, ringOf } from '@/domain/people';
 import { personTimeline } from '@/domain/timeline';
 import { Avatar } from '@/components/Avatar';
 import { AvatarPicker } from '@/components/AvatarEditor';
-import { Badge, DateField, Field } from '@/components/ui/Form';
+import { Badge } from '@/components/ui/Form';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { EmptyState } from '@/components/ui/States';
 import { TimelineList, PhotoThumb } from '@/features/story/TimelineList';
 import { RelationshipSheet } from './RelationshipSheet';
+import { InfoRow, Section } from './PersonSections';
+import { HistoryEditSheet } from './HistoryEditSheet';
 
-function InfoRow({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
-  return (
-    <div className="flex gap-3 py-2.5">
-      <span className="mt-0.5 text-muted">{icon}</span>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs text-muted">{label}</p>
-        <div className="whitespace-pre-line break-words text-[15px]">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-function Section({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
-  return (
-    <section className="card p-4">
-      <div className="mb-1 flex items-center justify-between">
-        <h2 className="text-[15px] font-semibold">{title}</h2>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function HistoryEditSheet({ entry, onClose }: { entry: RelationshipHistory; onClose: () => void }) {
-  const [date, setDate] = useState(entry.effective_date);
-  const [precision, setPrecision] = useState(entry.date_precision);
-  const [description, setDescription] = useState(entry.description ?? '');
-  return (
-    <Sheet
-      open
-      onClose={onClose}
-      title="Moment aanpassen"
-      footer={
-        <Button
-          block
-          variant="primary"
-          onClick={() => void updateHistoryEntry(entry.id, { effective_date: date || entry.effective_date, date_precision: precision, description: description.trim() || null }).then(onClose)}
-        >
-          Opslaan
-        </Button>
-      }
-    >
-      <div className="space-y-4 p-4">
-        <Field label="Vanaf wanneer?">{(id) => <DateField id={id} value={date} precision={precision} onChange={(d, p) => (setDate(d), setPrecision(p))} max={todayIso()} />}</Field>
-        <Field label="Omschrijving">{(id) => <input id={id} className="field" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} />}</Field>
-      </div>
-    </Sheet>
-  );
-}
 
 export default function PersonPage() {
   const { id } = useParams();

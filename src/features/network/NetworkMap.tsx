@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Maximize2, Minus, Plus } from 'lucide-react';
 import { HUB_RADIUS, layoutNetwork, type Ring } from '@/domain/layout';
-import { initials, type ConnectionSide } from '@/domain/people';
-import { useSignedUrl } from '@/lib/images';
+import type { ConnectionSide } from '@/domain/people';
+import { SvgAvatar } from './SvgAvatar';
 import type { Profile } from '@/lib/db/types';
 import { IconButton } from '@/components/ui/Button';
 
@@ -44,30 +44,6 @@ const clampK = (k: number) => Math.min(MAX_K, Math.max(MIN_K, k));
 /** Vertrekpunt van de lijn: bij Bjorn (links), Stephanie (rechts) of het midden (beiden). */
 function originOf(side: ConnectionSide): { x: number; y: number } {
   return side === 'bjorn' ? { x: -22, y: 0 } : side === 'stephanie' ? { x: 22, y: 0 } : { x: 0, y: 0 };
-}
-
-function SvgAvatar({ id, path, name, size, color, x = 0, y = 0, glow }: { id: string; path: string | null; name: string; size: number; color: string; x?: number; y?: number; glow?: boolean }) {
-  const url = useSignedUrl(path);
-  const r = size / 2;
-  return (
-    <g transform={`translate(${x} ${y})`}>
-      {glow && <circle r={r + 6} fill={color} opacity={0.18} />}
-      <circle r={r} fill="var(--surface-2)" />
-      {url ? (
-        <>
-          <clipPath id={`clip-${id}`}>
-            <circle r={r} />
-          </clipPath>
-          <image href={url} x={-r} y={-r} width={size} height={size} clipPath={`url(#clip-${id})`} preserveAspectRatio="xMidYMid slice" />
-        </>
-      ) : (
-        <text textAnchor="middle" dominantBaseline="central" fontSize={size * 0.36} fontWeight={600} fill="var(--muted)">
-          {initials(name)}
-        </text>
-      )}
-      <circle r={r} fill="none" stroke={color} strokeWidth={Math.max(2, size / 18)} />
-    </g>
-  );
 }
 
 export function NetworkMap({

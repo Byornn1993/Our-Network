@@ -4,54 +4,22 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CalendarDays, ChevronLeft, ImagePlus, Lock, MapPin, NotebookPen, Pencil, Star, Tag, Trash2 } from 'lucide-react';
 import { useStore } from '@/lib/db/store';
 import type { EventPhoto } from '@/lib/db/types';
-import { addEventPhotos, deleteEvent, deletePhoto, updatePhoto } from '@/lib/actions';
-import { removeFiles, uploadEventPhoto, useSignedUrl } from '@/lib/images';
+import { addEventPhotos, deleteEvent, deletePhoto } from '@/lib/actions';
+import { removeFiles, uploadEventPhoto } from '@/lib/images';
 import { useSyncStatus } from '@/lib/sync/status';
 import { canUpload } from '@/lib/backend';
 import { flushSync } from '@/lib/sync/scheduler';
 import { formatRange, relativeDays } from '@/domain/dates';
 import { fullName } from '@/domain/people';
 import { Avatar } from '@/components/Avatar';
-import { Badge, Field } from '@/components/ui/Form';
+import { Badge } from '@/components/ui/Form';
 import { Button, IconButton } from '@/components/ui/Button';
-import { Sheet } from '@/components/ui/Sheet';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { EmptyState } from '@/components/ui/States';
 import { CatIcon } from '@/components/icons';
-import { PersonPicker } from '@/components/PersonPicker';
-import { PhotoThumb } from './TimelineList';
 import { Lightbox } from './Lightbox';
+import { PhotoEditSheet, PhotoFill } from './EventPhotos';
 
-function PhotoEditSheet({ photo, onClose, onDelete }: { photo: EventPhoto; onClose: () => void; onDelete: () => void }) {
-  const s = useStore();
-  const [caption, setCaption] = useState(photo.caption ?? '');
-  const [persons, setPersons] = useState(s.photo_persons.filter((p) => p.photo_id === photo.id).map((p) => p.person_id));
-  return (
-    <Sheet
-      open
-      onClose={onClose}
-      title="Foto"
-      footer={
-        <div className="flex gap-2">
-          <Button variant="danger" icon={<Trash2 size={16} />} onClick={onDelete}>
-            Verwijderen
-          </Button>
-          <Button block variant="primary" onClick={() => void updatePhoto(s, photo.id, caption.trim() || null, persons).then(onClose)}>
-            Opslaan
-          </Button>
-        </div>
-      }
-    >
-      <div className="space-y-4 p-4">
-        <div className="flex justify-center">
-          <PhotoThumb photo={photo} size={160} />
-        </div>
-        <Field label="Bijschrift">{(id) => <input id={id} className="field" value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={500} />}</Field>
-        <Field label="Wie staat erop?">{() => <PersonPicker value={persons} onChange={setPersons} />}</Field>
-      </div>
-    </Sheet>
-  );
-}
 
 export default function EventPage() {
   const { id } = useParams();
@@ -251,9 +219,4 @@ export default function EventPage() {
       {dialog}
     </div>
   );
-}
-
-function PhotoFill({ photo }: { photo: EventPhoto }) {
-  const url = useSignedUrl(photo.thumb_path ?? photo.storage_path);
-  return <span className="block h-full w-full bg-surface-2">{url && <img src={url} alt={photo.caption ?? ''} className="h-full w-full object-cover" loading="lazy" />}</span>;
 }
