@@ -54,7 +54,7 @@ tests/           unit · rls · e2e
 **App (PWA):** https://byornn1993.github.io/Our-Network/ met de gegevens in het Supabase-project van Be Strong. Alles van Our Network heet `net_…`; Be Strong en Boodschappenlijst blijven ongemoeid (getest in `tests/rls/shared-project.test.ts`). Inloggen met het Be Strong-account. Installatie en overzetten: [STAPPENPLAN.md](STAPPENPLAN.md).
 
 **Artifact (reserve):** de eerste versie draaide als claude.ai-Artifact:
-https://claude.ai/artifact/A5euRhFGiwRrz2RfmLkVzq — zie [docs/PLAN-ARTIFACT.md](docs/PLAN-ARTIFACT.md).
+https://claude.ai/artifact/A5euRhFGiwRrz2RfmLkVzq — zie [docs/archief/PLAN-ARTIFACT.md](docs/archief/PLAN-ARTIFACT.md) (gearchiveerd: de artifact is enkel nog reserve).
 
 ```bash
 npm run build:artifact

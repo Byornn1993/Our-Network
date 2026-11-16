@@ -1,5 +1,7 @@
 # Our Network — technisch implementatieplan
 
+> **Origineel ontwerp (oktober 2026).** Het datamodel, de sync en de schermen gelden nog. Sindsdien gewijzigd: Our Network draait als gast-app in het Supabase-project van Be Strong (alles `net_…`, zie [SUPABASE_SHARED.md](../SUPABASE_SHARED.md)) en gebruikt de Bjorn-huisstijl (goud op donker) in plaats van het mintpalet. Actuele stand: [README.md](../README.md) en [AUDIT.md](AUDIT.md).
+
 ## 1. Analyse van de bestaande apps
 
 | | Bjorn Finance | Be Strong | Our Network (keuze) |
