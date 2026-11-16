@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             react: ['react', 'react-dom', 'react-router-dom'],
-            data: ['dexie', 'dexie-react-hooks', 'zod', 'uuid'],
+            data: ['dexie', 'dexie-react-hooks', 'uuid'], // zod niet: enkel nodig bij back-up importeren (laadt met dat scherm)
             ...(artifact ? {} : { supabase: ['@supabase/supabase-js'] }),
           },
         },

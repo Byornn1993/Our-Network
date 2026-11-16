@@ -1,4 +1,4 @@
-import { v4, v5 } from 'uuid';
+import { v5 } from 'uuid';
 import { getDb } from './schema';
 import type { RowTypes, SyncTable } from './types';
 import { enqueue } from '@/lib/sync/outbox';
@@ -7,7 +7,7 @@ import { notifyLocalChange } from '@/lib/sync/scheduler';
 // Schrijflaag: elke wijziging gaat in één transactie naar de lokale database ÉN de outbox.
 // Verwijderen = deleted_at zetten (soft delete); de server laat geen echte deletes toe.
 
-export const newId = (): string => v4();
+export const newId = (): string => crypto.randomUUID();
 
 const LINK_NS = '6f1d2c3b-8a4e-4f7a-9c0d-5b2e1a7c3d90';
 /**
