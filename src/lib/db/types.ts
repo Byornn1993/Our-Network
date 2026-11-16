@@ -185,4 +185,3 @@ export interface RowTypes {
   photo_persons: PhotoPerson;
 }
 
-export type AnyRow = RowTypes[SyncTable];

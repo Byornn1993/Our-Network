@@ -13,8 +13,6 @@ export function initials(name: string): string {
 /** Ring op de kaart: handmatige afstand gaat voor op de standaard van de categorie. */
 export const ringOf = (p: Person, c: Category | undefined): 1 | 2 | 3 | 4 => p.ring_override ?? c?.ring ?? 4;
 
-export const RING_LABEL: Record<number, string> = { 1: '1e ring', 2: '2e ring', 3: '3e ring', 4: '4e ring' };
-
 export type ConnectionSide = 'both' | 'bjorn' | 'stephanie' | 'none';
 
 /** Met wie is deze persoon verbonden? slot 1 = Bjorn, slot 2 = Stephanie. */

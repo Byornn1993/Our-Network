@@ -21,24 +21,6 @@ export function PageHeader({ title, back, onBack, actions, subtitle }: { title: 
   );
 }
 
-export function Tabs<T extends string>({ value, onChange, tabs }: { value: T; onChange: (v: T) => void; tabs: { value: T; label: string }[] }) {
-  return (
-    <div role="tablist" className="flex gap-1 rounded-xl bg-surface p-1">
-      {tabs.map((t) => (
-        <button
-          key={t.value}
-          role="tab"
-          aria-selected={value === t.value}
-          onClick={() => onChange(t.value)}
-          className={`min-h-[40px] flex-1 rounded-lg px-3 text-sm font-medium transition duration-150 ${value === t.value ? 'bg-accent text-accent-ink' : 'text-muted hover:text-text'}`}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export function Chip({ active, onClick, children }: { active?: boolean; onClick?: () => void; children: ReactNode }) {
   return (
     <button
