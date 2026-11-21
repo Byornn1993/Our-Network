@@ -14,7 +14,7 @@ Je hoeft niets te programmeren. Reken op ongeveer 20 minuten.
 
 1. Ga naar **supabase.com**, log in en open het project **Be Strong**.
 2. Klik links op **SQL Editor** (`>_`) › **+ New query**.
-3. Open op je laptop **Documenten › Our Network › supabase › setup-productie.sql** met Kladblok.
+3. Open op je laptop **Documenten › Persoonlijke apps › Our Network › supabase › setup-productie.sql** met Kladblok.
 4. **Ctrl + A**, **Ctrl + C**, terug naar Supabase, **Ctrl + V**.
 5. Klik **Run**. Onderaan moet **Success. No rows returned** verschijnen.
 

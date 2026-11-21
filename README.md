@@ -13,7 +13,7 @@ Onderdeel van het persoonlijke app-ecosysteem naast Bjorn Finance en Be Strong, 
 
 | | |
 |---|---|
-| Frontend | Vite 5, React 18, TypeScript (strict), Tailwind 3 met CSS-tokens, react-router 6 |
+| Frontend | Vite 5, React 18, TypeScript (strict), Tailwind 3 met CSS-tokens, react-router 7 |
 | Data | Dexie (IndexedDB) local-first + outbox-synchronisatie |
 | Backend | Supabase-project van Be Strong, als gast-app met prefix `net_` (Postgres + RLS, Auth, privé-bucket `net-photos`). Zie [SUPABASE_SHARED.md](SUPABASE_SHARED.md) |
 | PWA | vite-plugin-pwa (Workbox), enkel de app-shell wordt gecachet |
